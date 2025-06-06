@@ -107,14 +107,16 @@
       margin: auto;
     }
     .custom-checkbox.checked {
-      background-color: #4ade80;
-      border-color: #22c55e;
+      background-color: #ffffff;
+      border-color: #8b5cf6; /* Roxo vibrante */
     }
     .custom-checkbox.checked::after {
-      content: '✔';
-      color: white;
-      font-size: 22px;
-      font-weight: bold;
+      content: '';
+      display: block;
+      width: 14px;
+      height: 14px;
+      background-color: #8b5cf6;
+      border-radius: 50%;
     }
 
     .item-color-picker {
@@ -192,6 +194,16 @@
         width: auto !important;
         padding: 4px 1px !important; /* Padding mínimo */
         text-align: center !important;
+      }
+
+      .custom-checkbox.checked {
+        background-color: #fff !important; /* Garante fundo branco na impressão */
+      }
+      .custom-checkbox.checked::after {
+        content: '' !important;
+        display: block !important;
+        background-color: #5b21b6 !important; /* Roxo mais escuro para melhor contraste na impressão */
+        border-radius: 50% !important;
       }
 
       .task-name-text {
@@ -770,7 +782,8 @@
                         height: var(--print-checkbox-size) !important;
                     }
                     .custom-checkbox.checked::after {
-                        font-size: var(--print-checkmark-size) !important;
+                        width: var(--print-checkmark-size) !important;
+                        height: var(--print-checkmark-size) !important;
                     }
                 }
             `;
@@ -811,4 +824,4 @@
 
 </script>
 </body>
-</ht
+<
