@@ -235,6 +235,9 @@
     <div class="flex justify-center items-center gap-2 flex-wrap">
       <button id="import-button" class="action-button bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md">Importar JSON</button>
       <button id="export-button" class="action-button bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md">Exportar JSON</button>
+      <button id="share-button" class="action-button bg-purple-500 hover:bg-purple-600 text-white font-semibold p-3 rounded-lg shadow-md hidden" title="Compartilhar">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share-2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+      </button>
       <button id="print-button" class="action-button bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md">Imprimir Lista</button>
     </div>
     <input type="file" id="import-file-input" class="hidden" accept="application/json">
@@ -251,6 +254,7 @@
   const printFontSizeInput = document.getElementById('print-font-size');
   const importButton = document.getElementById('import-button');
   const exportButton = document.getElementById('export-button');
+  const shareButton = document.getElementById('share-button');
   const importFileInput = document.getElementById('import-file-input');
 
   const dayNamesShort = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -639,14 +643,12 @@
       try {
         const importedData = JSON.parse(e.target.result);
         if (importedData && Array.isArray(importedData.tasks) && importedData.settings) {
-          // Carrega e salva os novos dados
           localStorage.setItem('tasks', JSON.stringify(importedData.tasks));
           if (importedData.settings.printFontSize) {
             localStorage.setItem('printFontSize', importedData.settings.printFontSize);
             printFontSizeInput.value = importedData.settings.printFontSize;
           }
 
-          // Recarrega a aplicação com os novos dados
           loadTasksFromLocalStorage();
           alert('Dados importados com sucesso!');
         } else {
@@ -657,7 +659,32 @@
       }
     };
     reader.readAsText(file);
-    event.target.value = ''; // Limpa o input para permitir importar o mesmo arquivo novamente
+    event.target.value = '';
+  });
+
+  shareButton.addEventListener('click', async () => {
+    const dataToExport = {
+      tasks: getTasksFromStorage(),
+      settings: {
+        printFontSize: printFontSizeInput.value
+      }
+    };
+    const dataStr = JSON.stringify(dataToExport, null, 2);
+    const file = new File([dataStr], 'lista_de_tarefas.json', { type: 'application/json' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          title: 'Tarefas da Semana',
+          text: 'Aqui está a sua lista de tarefas exportada.',
+          files: [file]
+        });
+      } catch (error) {
+        console.error('Erro ao compartilhar:', error);
+      }
+    } else {
+      alert('Seu navegador não suporta o compartilhamento deste arquivo.');
+    }
   });
 
   printButton.addEventListener('click', () => {
@@ -715,6 +742,11 @@
     const savedFontSize = localStorage.getItem('printFontSize');
     if (savedFontSize) {
       printFontSizeInput.value = savedFontSize;
+    }
+
+    // Verifica se a API de compartilhamento é suportada e mostra o botão
+    if (navigator.share) {
+      shareButton.classList.remove('hidden');
     }
 
     loadTasksFromLocalStorage();
