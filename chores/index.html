@@ -112,8 +112,8 @@
       margin: auto;
     }
     .custom-checkbox.checked {
-      background-color: transparent; /* Fundo transparente ao marcar */
-      border-color: transparent; /* A borda some ao marcar */
+      background-color: transparent;
+      border-color: transparent;
     }
     .custom-checkbox.checked::after {
       content: '';
@@ -322,12 +322,10 @@
     let baseDate;
 
     if (startDateString) {
-      // Parse a data como UTC para evitar problemas de fuso horário
       const [year, month, day] = startDateString.split('-').map(Number);
       baseDate = new Date(Date.UTC(year, month - 1, day));
     } else {
       const today = new Date();
-      // Calcula amanhã com base na data local e depois cria em UTC para padronizar
       baseDate = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate() + 1));
     }
 
@@ -338,7 +336,8 @@
         dayName: dayNamesShort[currentDate.getUTCDay()],
         date: currentDate.getUTCDate(),
         month: monthNamesShort[currentDate.getUTCMonth()],
-        fullDateString: currentDate.toISOString().split('T')[0]
+        fullDateString: currentDate.toISOString().split('T')[0],
+        weekdayIndex: currentDate.getUTCDay() // Adiciona o índice do dia da semana (0=Dom, 6=Sáb)
       });
     }
     return days;
@@ -472,8 +471,8 @@
     const saveEdit = () => {
       const newName = taskNameInput.value.trim();
       if (newName) {
+        updateTaskProperty(task.id, 'name', newName);
         taskNameText.textContent = newName;
-        saveTasksToLocalStorage();
       }
       taskNameInput.classList.add('hidden');
       taskNameText.classList.remove('hidden');
@@ -509,12 +508,7 @@
     });
 
     itemColorInput.addEventListener('input', (event) => {
-      const tasks = getTasksFromStorage();
-      const taskIndex = tasks.findIndex(t => t.id === task.id);
-      if (taskIndex > -1) {
-        tasks[taskIndex].backgroundColor = event.target.value;
-        localStorage.setItem('tasks', JSON.stringify(tasks));
-      }
+      updateTaskProperty(task.id, 'backgroundColor', event.target.value);
       applyRowBackgrounds();
     });
     itemColorCell.appendChild(itemColorInput);
@@ -527,28 +521,24 @@
 
       const checkboxPlaceholder = document.createElement('div');
       checkboxPlaceholder.className = 'checkbox-placeholder custom-checkbox';
-      checkboxPlaceholder.dataset.date = dayInfo.fullDateString;
+      checkboxPlaceholder.dataset.weekdayIndex = dayInfo.weekdayIndex;
 
-      if (task.checkedDates && task.checkedDates.includes(dayInfo.fullDateString)) {
+      if (task.checkedDays && task.checkedDays[dayInfo.weekdayIndex]) {
         checkboxPlaceholder.classList.add('checked');
         checkboxPlaceholder.setAttribute('aria-checked', 'true');
       } else {
         checkboxPlaceholder.setAttribute('aria-checked', 'false');
       }
       checkboxPlaceholder.setAttribute('tabindex', '0');
-      const checkboxId = `${task.id}-day-${dayInfo.fullDateString}`;
-      checkboxPlaceholder.setAttribute('aria-labelledby', checkboxId);
-
-      const hiddenLabel = document.createElement('label');
-      hiddenLabel.id = checkboxId;
-      hiddenLabel.className = 'sr-only';
-      hiddenLabel.textContent = `Marcar tarefa ${task.name} para ${dayInfo.dayName} ${dayInfo.date}/${dayInfo.month}`;
 
       checkboxPlaceholder.onclick = function() {
-        this.classList.toggle('checked');
-        this.setAttribute('aria-checked', this.classList.contains('checked') ? 'true' : 'false');
-        saveTasksToLocalStorage();
+        const isChecked = this.classList.toggle('checked');
+        this.setAttribute('aria-checked', isChecked);
+        updateTaskProperty(task.id, 'checkedDays', (currentTask) => {
+          currentTask.checkedDays[dayInfo.weekdayIndex] = isChecked;
+        });
       };
+
       checkboxPlaceholder.onkeydown = function(event) {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
@@ -557,7 +547,6 @@
       };
 
       dayCell.appendChild(checkboxPlaceholder);
-      dayCell.appendChild(hiddenLabel);
       taskRow.appendChild(dayCell);
     });
 
@@ -589,10 +578,10 @@
     deleteButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>`;
     deleteButton.setAttribute('aria-label', `Excluir tarefa ${task.name}`);
     deleteButton.onclick = function() {
-      taskRow.remove();
-      saveTasksToLocalStorage();
-      applyRowBackgrounds();
-      updateNoTasksMessage();
+      let tasks = getTasksFromStorage();
+      tasks = tasks.filter(t => t.id !== task.id);
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+      renderCalendar(calendarStartDateInput.value);
     };
     actionsCell.appendChild(deleteButton);
 
@@ -605,40 +594,28 @@
     return JSON.parse(localStorage.getItem('tasks')) || [];
   }
 
-  function getTasksFromDOM() {
-    const tasks = [];
-    const taskRows = taskTableBody.querySelectorAll('.task-row');
-    taskRows.forEach(row => {
-      const id = row.id;
-      const name = row.querySelector('.task-name-text').textContent;
-      const itemColorPickerElement = row.querySelector('.item-color-picker');
-      const backgroundColor = itemColorPickerElement ? itemColorPickerElement.value : '#ffffff';
-      const checkedDates = [];
-      row.querySelectorAll('.custom-checkbox.checked').forEach(cb => {
-        if (cb.dataset.date) {
-          checkedDates.push(cb.dataset.date);
-        }
-      });
-      tasks.push({ id, name, checkedDates, backgroundColor });
-    });
-    return tasks;
-  }
-
-  function saveTasksToLocalStorage() {
-    const tasks = getTasksFromDOM();
-    localStorage.setItem('tasks', JSON.stringify(tasks));
+  function updateTaskProperty(taskId, key, valueOrUpdater) {
+    const tasks = getTasksFromStorage();
+    const taskIndex = tasks.findIndex(t => t.id === taskId);
+    if (taskIndex > -1) {
+      if (typeof valueOrUpdater === 'function') {
+        valueOrUpdater(tasks[taskIndex]);
+      } else {
+        tasks[taskIndex][key] = valueOrUpdater;
+      }
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
   }
 
   function loadInitialTasks() {
     let tasks = getTasksFromStorage();
-
     if (tasks.length === 0) {
       tasks = [
-        { id: `task-example-1`, name: "Lavar a Louça", checkedDates: [], backgroundColor: '#ffffff' },
-        { id: `task-example-2`, name: "Dobrar Roupas", checkedDates: [], backgroundColor: '#ffffff' },
-        { id: `task-example-3`, name: "Limpar o Banheiro", checkedDates: [], backgroundColor: '#ffffff' },
-        { id: `task-example-4`, name: "Passar Aspirador", checkedDates: [], backgroundColor: '#ffffff' },
-        { id: `task-example-5`, name: "Fazer Compras", checkedDates: [], backgroundColor: '#ffffff' }
+        { id: `task-example-1`, name: "Lavar a Louça", checkedDays: Array(7).fill(false), backgroundColor: '#ffffff' },
+        { id: `task-example-2`, name: "Dobrar Roupas", checkedDays: Array(7).fill(false), backgroundColor: '#ffffff' },
+        { id: `task-example-3`, name: "Limpar o Banheiro", checkedDays: Array(7).fill(false), backgroundColor: '#ffffff' },
+        { id: `task-example-4`, name: "Passar Aspirador", checkedDays: Array(7).fill(false), backgroundColor: '#ffffff' },
+        { id: `task-example-5`, name: "Fazer Compras", checkedDays: Array(7).fill(false), backgroundColor: '#ffffff' }
       ];
       localStorage.setItem('tasks', JSON.stringify(tasks));
     }
@@ -654,10 +631,14 @@
   });
   taskTableBody.addEventListener('dragend', (e) => {
     if (draggedItem && e.target.classList.contains('task-row')) {
+      const allTasks = getTasksFromStorage();
+      const orderedIds = Array.from(taskTableBody.querySelectorAll('.task-row')).map(row => row.id);
+      const reorderedTasks = orderedIds.map(id => allTasks.find(t => t.id === id)).filter(Boolean);
+      localStorage.setItem('tasks', JSON.stringify(reorderedTasks));
+
       setTimeout(() => {
         draggedItem.classList.remove('dragging');
         draggedItem = null;
-        saveTasksToLocalStorage();
         applyRowBackgrounds();
       }, 0);
     }
@@ -701,7 +682,7 @@
     const newTask = {
       id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       name: taskNameValue,
-      checkedDates: [],
+      checkedDays: Array(7).fill(false),
       backgroundColor: '#ffffff'
     };
 
