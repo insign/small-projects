@@ -232,10 +232,12 @@
       <label for="print-font-size" class="text-sm font-medium text-slate-600">Fonte (Impressão):</label>
       <input type="number" id="print-font-size" value="9" min="6" max="16" class="w-20 p-2 border border-slate-300 rounded-lg text-center">
     </div>
-    <button id="print-button"
-            class="action-button bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md">
-      Imprimir Lista
-    </button>
+    <div class="flex justify-center items-center gap-2 flex-wrap">
+      <button id="import-button" class="action-button bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md">Importar JSON</button>
+      <button id="export-button" class="action-button bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md">Exportar JSON</button>
+      <button id="print-button" class="action-button bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md">Imprimir Lista</button>
+    </div>
+    <input type="file" id="import-file-input" class="hidden" accept="application/json">
   </footer>
 </div>
 
@@ -247,6 +249,9 @@
   const printButton = document.getElementById('print-button');
   const noTasksMessage = document.getElementById('no-tasks-message');
   const printFontSizeInput = document.getElementById('print-font-size');
+  const importButton = document.getElementById('import-button');
+  const exportButton = document.getElementById('export-button');
+  const importFileInput = document.getElementById('import-file-input');
 
   const dayNamesShort = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
   const monthNamesShort = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -598,7 +603,63 @@
     }
   });
 
-  // Listener do botão de impressão simplificado
+  exportButton.addEventListener('click', () => {
+    const dataToExport = {
+      tasks: getTasksFromStorage(),
+      settings: {
+        printFontSize: printFontSizeInput.value
+      }
+    };
+
+    const dataStr = JSON.stringify(dataToExport, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'lista_de_tarefas.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  });
+
+  importButton.addEventListener('click', () => {
+    importFileInput.click();
+  });
+
+  importFileInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const importedData = JSON.parse(e.target.result);
+        if (importedData && Array.isArray(importedData.tasks) && importedData.settings) {
+          // Carrega e salva os novos dados
+          localStorage.setItem('tasks', JSON.stringify(importedData.tasks));
+          if (importedData.settings.printFontSize) {
+            localStorage.setItem('printFontSize', importedData.settings.printFontSize);
+            printFontSizeInput.value = importedData.settings.printFontSize;
+          }
+
+          // Recarrega a aplicação com os novos dados
+          loadTasksFromLocalStorage();
+          alert('Dados importados com sucesso!');
+        } else {
+          throw new Error('Formato do arquivo JSON é inválido.');
+        }
+      } catch (error) {
+        alert('Erro ao importar o arquivo: ' + error.message);
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = ''; // Limpa o input para permitir importar o mesmo arquivo novamente
+  });
+
   printButton.addEventListener('click', () => {
     const fontSize = printFontSizeInput.value;
     if (!fontSize || fontSize < 6 || fontSize > 16) {
@@ -606,14 +667,11 @@
       return;
     }
 
-    // Salva o tamanho da fonte no localStorage
     localStorage.setItem('printFontSize', fontSize);
 
-    // Proporções para o checkbox com base no tamanho da fonte
     const checkboxSize = parseFloat(fontSize) * 2.2;
     const checkmarkSize = parseFloat(fontSize) * 1.6;
 
-    // Cria uma folha de estilo dinâmica para a impressão
     const printStyles = `
                 @media print {
                     :root {
@@ -636,27 +694,24 @@
             `;
 
     const styleSheet = document.createElement("style");
-    styleSheet.id = 'dynamic-print-style'; // Dá um ID para poder remover depois
+    styleSheet.id = 'dynamic-print-style';
     styleSheet.innerText = printStyles;
     document.head.appendChild(styleSheet);
 
-    // Chama a impressão
     window.print();
 
-    // Remove a folha de estilo dinâmica após a impressão para não afetar a tela
     setTimeout(() => {
       const styleElement = document.getElementById('dynamic-print-style');
       if (styleElement) {
         styleElement.remove();
       }
-    }, 1000); // Atraso para garantir que a impressão foi processada
+    }, 1000);
   });
 
 
   function initializeApp() {
     createTableHeader();
 
-    // Carrega o tamanho da fonte da impressão do localStorage
     const savedFontSize = localStorage.getItem('printFontSize');
     if (savedFontSize) {
       printFontSizeInput.value = savedFontSize;
