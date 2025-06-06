@@ -128,8 +128,8 @@
     @media print {
       body {
         background-color: #fff !important;
-        margin: 0;
-        padding: 0.5cm; /* Margem da página reduzida para ocupar mais espaço */
+        margin: 0 !important;
+        padding: 0 !important; /* Remove padding para dar controle ao usuário */
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
@@ -149,8 +149,13 @@
         margin: 0 !important;
       }
 
-      .task-table, .task-table th, .task-table td {
-        border: 1px solid #666 !important; /* Bordas visíveis */
+      .task-table {
+        border-style: hidden; /* Remove a borda externa da tabela */
+        border-collapse: collapse;
+      }
+
+      .task-table th, .task-table td {
+        border: 1px solid #666 !important; /* Mantém apenas bordas internas */
         padding: 4px 2px; /* Padding mínimo */
         word-break: break-word; /* Permite quebrar palavras longas se necessário */
       }
@@ -219,7 +224,7 @@
         </tbody>
       </table>
     </div>
-    <p id="no-tasks-message" class="text-center text-slate-500 mt-6 hidden">Nenhuma tarefa adicionada ainda. Clique em "Adicionar Tarefa" ou recarregue a página para ver exemplos.</p>
+    <p id="no-tasks-message" class="text-center text-slate-500 mt-6">Nenhuma tarefa adicionada ainda. Clique em "Adicionar Tarefa" ou recarregue a página para ver exemplos.</p>
   </section>
 
   <footer class="mt-10 text-center no-print">
@@ -601,9 +606,12 @@
       return;
     }
 
+    // Salva o tamanho da fonte no localStorage
+    localStorage.setItem('printFontSize', fontSize);
+
     // Proporções para o checkbox com base no tamanho da fonte
-    const checkboxSize = fontSize * 2.0;
-    const checkmarkSize = fontSize * 1.5;
+    const checkboxSize = parseFloat(fontSize) * 2.2;
+    const checkmarkSize = parseFloat(fontSize) * 1.6;
 
     // Cria uma folha de estilo dinâmica para a impressão
     const printStyles = `
@@ -647,6 +655,13 @@
 
   function initializeApp() {
     createTableHeader();
+
+    // Carrega o tamanho da fonte da impressão do localStorage
+    const savedFontSize = localStorage.getItem('printFontSize');
+    if (savedFontSize) {
+      printFontSizeInput.value = savedFontSize;
+    }
+
     loadTasksFromLocalStorage();
   }
 
