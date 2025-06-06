@@ -337,7 +337,7 @@
         date: currentDate.getUTCDate(),
         month: monthNamesShort[currentDate.getUTCMonth()],
         fullDateString: currentDate.toISOString().split('T')[0],
-        weekdayIndex: currentDate.getUTCDay() // Adiciona o índice do dia da semana (0=Dom, 6=Sáb)
+        weekdayIndex: currentDate.getUTCDay()
       });
     }
     return days;
