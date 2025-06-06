@@ -76,7 +76,23 @@
 
     .task-name-text {
       text-transform: uppercase;
+      cursor: pointer;
     }
+    .task-name-text:hover {
+      background-color: #f0f9ff; /* sky-50 */
+    }
+
+    .task-name-edit-input {
+      font-family: 'Inter', sans-serif;
+      text-transform: uppercase;
+      font-weight: 500;
+      width: 100%;
+      background-color: #f0f9ff;
+      border: 1px solid #38bdf8;
+      border-radius: 4px;
+      padding: 2px 4px;
+    }
+
 
     .custom-checkbox {
       width: 32px;
@@ -394,11 +410,50 @@
 
     const nameCell = document.createElement('td');
     nameCell.className = 'task-name-cell';
+
     const taskNameText = document.createElement('span');
     taskNameText.className = 'task-name-text text-slate-700 font-medium break-words';
     taskNameText.textContent = task.name;
+
+    const taskNameInput = document.createElement('input');
+    taskNameInput.type = 'text';
+    taskNameInput.className = 'task-name-edit-input hidden';
+    taskNameInput.value = task.name;
+
     nameCell.appendChild(taskNameText);
+    nameCell.appendChild(taskNameInput);
     taskRow.appendChild(nameCell);
+
+    // Lógica de edição inline
+    taskNameText.addEventListener('click', () => {
+      taskNameText.classList.add('hidden');
+      taskNameInput.classList.remove('hidden');
+      taskNameInput.value = taskNameText.textContent;
+      taskNameInput.focus();
+      taskNameInput.select();
+    });
+
+    const saveEdit = () => {
+      const newName = taskNameInput.value.trim();
+      if (newName) {
+        taskNameText.textContent = newName;
+        saveTasksToLocalStorage();
+      }
+      taskNameInput.classList.add('hidden');
+      taskNameText.classList.remove('hidden');
+    };
+
+    taskNameInput.addEventListener('blur', saveEdit);
+    taskNameInput.addEventListener('keypress', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        taskNameInput.blur();
+      } else if (event.key === 'Escape') {
+        taskNameInput.value = taskNameText.textContent;
+        taskNameInput.blur();
+      }
+    });
+
 
     const itemColorCell = document.createElement('td');
     itemColorCell.className = 'item-color-cell no-print text-center';
@@ -756,4 +811,4 @@
 
 </script>
 </body>
-</html>
+</ht
