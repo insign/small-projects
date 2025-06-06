@@ -124,110 +124,83 @@
     .action-button:hover { transform: translateY(-2px); }
     .action-button:active { transform: translateY(0px); }
 
-    /* Estilos de Impressão */
+    /* REGRAS DE IMPRESSÃO OTIMIZADAS */
     @media print {
       body {
-        background-color: #fff !important; /* Força fundo branco */
-        margin: 10px;
-        -webkit-print-color-adjust: exact !important; /* Força cores de fundo no Chrome/Safari */
-        print-color-adjust: exact !important; /* Força cores de fundo (padrão) */
+        background-color: #fff !important;
+        margin: 0;
+        padding: 1cm; /* Margem da página */
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
-      .no-print { display: none !important; }
-      .task-table-container { overflow-x: visible; }
+
+      /* Oculta tudo que não for a lista */
+      .no-print, header, .add-task-section, footer {
+        display: none !important;
+      }
+
+      /* Garante que o container da lista seja visível */
+      .container, .task-list-section, .task-table-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
       .task-table, .task-table th, .task-table td {
-        border: 1.5px solid #888 !important; /* Bordas mais grossas e escuras */
-        font-size: 8pt; /* Fonte ainda menor para mais espaço */
-        padding: 0.2rem 0.1rem; /* Padding mínimo */
-        word-break: break-word; /* Permite quebrar palavras longas se necessário */
+        border: 1px solid #666 !important; /* Bordas visíveis */
+        font-size: 9pt;
+        padding: 4px 2px; /* Padding mínimo */
+        word-break: break-word;
       }
+
       .task-table th {
         background-color: #e9e9e9 !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
       }
-      .task-table th.task-name-header {
-        width: 45% !important; /* Mais espaço para o nome da tarefa */
+
+      /* Prioriza espaço para o nome da tarefa */
+      .task-table th.task-name-header, .task-table td.task-name-cell {
+        width: 50% !important; /* Mais espaço para o nome da tarefa */
+        padding-left: 5px !important;
       }
+
+      /* Encolhe colunas de dias para o mínimo necessário */
       .task-table th.day-header, .task-table td.day-checkbox-cell {
-        min-width: auto !important; /* Remove min-width para encolher */
-        width: auto !important;    /* Permite encolher */
-        padding: 0.2rem 0.1rem !important; /* Padding mínimo */
+        min-width: auto !important;
+        width: auto !important;
+        padding: 4px 1px !important; /* Padding mínimo */
+        text-align: center !important;
       }
+
       .custom-checkbox {
-        width: 22px !important;
-        height: 22px !important;
+        width: 18px !important;
+        height: 18px !important;
         border-width: 1px !important;
-        border-radius: 5px !important;
+        border-radius: 4px !important;
       }
       .custom-checkbox.checked::after {
-        font-size: 15px !important;
+        font-size: 14px !important;
       }
-      .task-name-text { font-weight: normal; text-transform: uppercase; }
-      h1.main-title { text-align: center; color: #000; margin-bottom: 15px; font-size: 1.4rem;}
-      .container { box-shadow: none; border: none; }
-      .add-task-section { display: none; }
-      .task-row { /* Tenta forçar a cor de fundo na impressão direta */
+
+      .task-name-text {
+        font-weight: normal;
+        text-transform: uppercase;
+        font-size: 9pt; /* Garante tamanho consistente */
+      }
+
+      .task-row {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
-    }
-    /* Estilos para a Janela de Visualização de Impressão */
-    .print-preview-body {
-      margin: 15px;
-      background-color: #fff !important;
-      font-family: 'Inter', sans-serif;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    .print-preview-body .task-table,
-    .print-preview-body .task-table th,
-    .print-preview-body .task-table td {
-      border: 1.5px solid #777 !important; /* Bordas mais grossas */
-      font-size: 8.5pt;
-      padding: 0.25rem 0.15rem;
-      word-break: break-word;
-    }
-    .print-preview-body .task-table th {
-      background-color: #f0f0f0 !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    .print-preview-body .task-table th.task-name-header {
-      width: 45% !important;
-    }
-    .print-preview-body .task-table th.day-header,
-    .print-preview-body .task-table td.day-checkbox-cell {
-      min-width: auto !important;
-      width: auto !important;
-      padding: 0.25rem 0.1rem !important;
-    }
-    .print-preview-body .custom-checkbox {
-      width: 24px !important;
-      height: 24px !important;
-      border-width: 1px !important;
-      border-radius: 6px !important;
-    }
-    .print-preview-body .custom-checkbox.checked::after {
-      font-size: 17px !important;
-    }
-    .print-preview-body .task-name-text { font-weight: normal; text-transform: uppercase; }
-    .print-preview-body h1.print-title { text-align: center; color: #000; margin-bottom: 15px; font-size: 1.5rem; }
-    .print-preview-body .no-print { display: none !important; }
-    body.print-preview-body .task-row {
-      background-color: transparent !important; /* Base para JS aplicar */
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    body.print-preview-body .task-color-header,
-    body.print-preview-body .item-color-cell {
-      display: none !important;
     }
 
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 p-4 md:p-8">
 <div class="container max-w-6xl mx-auto bg-white p-6 md:p-8 rounded-xl shadow-2xl">
-  <header class="mb-8 text-center">
+  <header class="mb-8 text-center no-print">
     <h1 class="text-3xl md:text-4xl font-bold text-sky-600 main-title">Minha Lista de Tarefas Semanal</h1>
   </header>
 
@@ -258,13 +231,13 @@
         </tbody>
       </table>
     </div>
-    <p id="no-tasks-message" class="text-center text-slate-500 mt-6 hidden">Nenhuma tarefa adicionada ainda. Clique em "Adicionar Tarefa" ou recarregue a página para ver exemplos.</p>
+    <p id="no-tasks-message" class="text-center text-slate-500 mt-6">Nenhuma tarefa adicionada ainda. Clique em "Adicionar Tarefa" ou recarregue a página para ver exemplos.</p>
   </section>
 
   <footer class="mt-10 text-center no-print">
-    <button id="print-preview-button"
+    <button id="print-button"
             class="action-button bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md">
-      Visualizar Impressão
+      Imprimir Lista
     </button>
   </footer>
 </div>
@@ -274,7 +247,7 @@
   const addTaskButton = document.getElementById('add-task-button');
   const taskTableHead = document.getElementById('task-table-head');
   const taskTableBody = document.getElementById('task-table-body');
-  const printPreviewButton = document.getElementById('print-preview-button');
+  const printButton = document.getElementById('print-button');
   const noTasksMessage = document.getElementById('no-tasks-message');
 
   const dayNamesShort = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -333,7 +306,6 @@
     dragHeaderCell.style.paddingLeft = '0.3rem';
     dragHeaderCell.style.paddingRight = '0.3rem';
 
-
     const taskNameHeaderCell = document.createElement('th');
     taskNameHeaderCell.className = 'task-name-header';
     taskNameHeaderCell.textContent = 'Tarefa';
@@ -369,39 +341,29 @@
       noTasksMessage.classList.remove('hidden');
       document.getElementById('task-table-container').classList.add('hidden');
     } else {
-      noTasksMessage.classList.add('hidden');
+      noTasksMessage.classList.remove('hidden');
       document.getElementById('task-table-container').classList.remove('hidden');
     }
   }
 
-  function applyRowBackgrounds(isForPrint = false) {
-    const targetBody = isForPrint ? printWindow.document.querySelector('.task-table tbody') : taskTableBody;
-    if (!targetBody) return;
-
-    const taskRows = targetBody.querySelectorAll('.task-row');
-    const tasksData = getTasksFromStorage(); // Sempre pega do localStorage para consistência
+  function applyRowBackgrounds() {
+    const taskRows = taskTableBody.querySelectorAll('.task-row');
+    const tasksData = getTasksFromStorage();
 
     taskRows.forEach((row, index) => {
       const taskData = tasksData.find(t => t.id === row.id);
       let backgroundColorToApply = 'var(--default-white-color)';
 
       if (taskData && taskData.backgroundColor && taskData.backgroundColor.toLowerCase() !== '#ffffff') {
-        backgroundColorToApply = lightenHexColor(taskData.backgroundColor, 75);
+        backgroundColorToApply = lightenHexColor(taskData.backgroundColor, 60);
       } else {
         if (index % 2 !== 0) {
           backgroundColorToApply = 'var(--default-stripe-color)';
         }
       }
       row.style.backgroundColor = backgroundColorToApply;
-      // Forçar estilos para impressão, se aplicável
-      if (isForPrint || (window.matchMedia && window.matchMedia('print').matches)) {
-        row.style.setProperty('background-color', backgroundColorToApply, 'important');
-        row.style.setProperty('-webkit-print-color-adjust', 'exact', 'important');
-        row.style.setProperty('print-color-adjust', 'exact', 'important');
-      }
     });
   }
-
 
   function createTaskRow(task) {
     if (!task.name || !task.name.trim()) {
@@ -638,121 +600,14 @@
     }
   });
 
-  // Variável global para a janela de impressão para que applyRowBackgrounds possa acessá-la
-  let printWindow = null;
-
-  printPreviewButton.addEventListener('click', () => {
-    const tableContainerClone = document.getElementById('task-table-container').cloneNode(true);
-    const mainTitleClone = document.querySelector('h1.main-title').cloneNode(true);
-    mainTitleClone.classList.add('print-title');
-    mainTitleClone.classList.remove('text-3xl', 'md:text-4xl', 'text-sky-600');
-
-    let styles = "";
-    document.querySelectorAll('style, link[rel="stylesheet"]').forEach(styleElement => {
-      if (styleElement.tagName === 'STYLE') {
-        styles += `<style>${styleElement.innerHTML}</style>`;
-      } else if (styleElement.tagName === 'LINK' && styleElement.href) {
-        styles += `<link rel="stylesheet" href="${styleElement.href}">`;
-      }
-    });
-
-    printWindow = window.open('', '_blank'); // Atribui à variável global
-    if (!printWindow) {
-      alert('Por favor, permita pop-ups para este site para visualizar a impressão.');
-      return;
-    }
-
-    printWindow.document.write(`
-                <html>
-                <head>
-                    <title>Visualização de Impressão - ${mainTitleClone.textContent}</title>
-                    ${styles}
-                </head>
-                <body class="print-preview-body">
-                    ${mainTitleClone.outerHTML}
-                    ${tableContainerClone.outerHTML}
-                    <script>
-                        // Aplica as cores de fundo corretas na janela de visualização
-                        // Esta função precisa ser definida ou acessível na janela de visualização
-                        // Para simplificar, vamos recriar a lógica de applyRowBackgrounds aqui,
-                        // mas focada em pegar dados do 'opener' (janela original).
-
-                        function lightenHexColorPreview(hex, percent) {
-                            // ... (cópia da função lightenHexColor)
-                            if (!hex || typeof hex !== 'string') return '#ffffff';
-                            hex = hex.replace(/^#/, '');
-                            if (hex.length === 3) hex = hex.split('').map(char => char + char).join('');
-                            if (hex.length !== 6) return '#ffffff';
-                            let r = parseInt(hex.substring(0, 2), 16);
-                            let g = parseInt(hex.substring(2, 4), 16);
-                            let b = parseInt(hex.substring(4, 6), 16);
-                            r = Math.min(255, r + Math.floor((255 - r) * (percent / 100)));
-                            g = Math.min(255, g + Math.floor((255 - g) * (percent / 100)));
-                            b = Math.min(255, b + Math.floor((255 - b) * (percent / 100)));
-                            return \`#\${r.toString(16).padStart(2, '0')}\${g.toString(16).padStart(2, '0')}\${b.toString(16).padStart(2, '0')}\`;
-                        }
-
-                        function applyBackgroundsInPreview() {
-                            const previewTableBody = document.querySelector('.task-table tbody');
-                            if (!previewTableBody) return;
-
-                            const previewTaskRows = previewTableBody.querySelectorAll('.task-row');
-                            // Tenta pegar as tarefas do localStorage da janela que abriu (opener)
-                            let tasksData = [];
-                            try {
-                                tasksData = JSON.parse(window.opener.localStorage.getItem('tasks')) || [];
-                            } catch (e) {
-                                console.error("Não foi possível acessar o localStorage da janela original.", e);
-                                // Como fallback, poderia tentar ler do DOM da janela original, mas é mais complexo
-                            }
-
-                            previewTaskRows.forEach((row, index) => {
-                                const taskData = tasksData.find(t => t.id === row.id);
-                                let backgroundColorToApply = '#ffffff'; // Padrão branco
-
-                                if (taskData && taskData.backgroundColor && taskData.backgroundColor.toLowerCase() !== '#ffffff') {
-                                    backgroundColorToApply = lightenHexColorPreview(taskData.backgroundColor, 75);
-                                } else {
-                                    if (index % 2 !== 0) {
-                                        backgroundColorToApply = '#f3f4f6'; // Cor zebrada padrão
-                                    }
-                                }
-                                row.style.backgroundColor = backgroundColorToApply;
-                                row.style.setProperty('-webkit-print-color-adjust', 'exact', 'important');
-                                row.style.setProperty('print-color-adjust', 'exact', 'important');
-                            });
-                        }
-
-                        // Copiar estado dos checkboxes
-                        const originalTableBody = window.opener.document.getElementById('task-table-body');
-                        const newTableBody = document.querySelector('.task-table tbody');
-                        if (originalTableBody && newTableBody && originalTableBody.rows.length === newTableBody.rows.length) {
-                            for (let i = 0; i < originalTableBody.rows.length; i++) {
-                                const originalRowCheckboxes = originalTableBody.rows[i].querySelectorAll('.custom-checkbox');
-                                const newRowCheckboxes = newTableBody.rows[i].querySelectorAll('.custom-checkbox');
-                                if (originalRowCheckboxes.length === newRowCheckboxes.length) {
-                                    originalRowCheckboxes.forEach((cb, indexCb) => {
-                                        if (cb.classList.contains('checked')) {
-                                            newRowCheckboxes[indexCb].classList.add('checked');
-                                            newRowCheckboxes[indexCb].setAttribute('aria-checked', 'true');
-                                        }
-                                    });
-                                }
-                            }
-                        }
-
-                        window.onload = function() {
-                            applyBackgroundsInPreview(); // Aplica fundos antes de tentar imprimir
-                            window.focus();
-                            // Descomente a linha abaixo para tentar abrir o diálogo de impressão automaticamente.
-                            // setTimeout(() => { window.print(); }, 500);
-                        };
-                    <\/script>
-                </body>
-                </html>
-            `);
-    printWindow.document.close(); // Importante para finalizar o carregamento do documento na nova janela
+  // Listener do botão de impressão simplificado
+  printButton.addEventListener('click', () => {
+    // A função applyRowBackgrounds() já é chamada sempre que os dados mudam,
+    // então as cores de fundo corretas (inline) já estarão aplicadas.
+    // O CSS @media print fará o resto.
+    window.print();
   });
+
 
   function initializeApp() {
     createTableHeader();
