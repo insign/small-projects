@@ -140,6 +140,24 @@
     .item-color-picker::-webkit-color-swatch { border: none; border-radius: 3px; }
     .item-color-picker::-moz-color-swatch { border: none; border-radius: 3px; }
 
+    .remove-color-button {
+      background-color: #ef4444;
+      color: white;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      font-size: 10px;
+      line-height: 16px;
+      text-align: center;
+      cursor: pointer;
+      border: none;
+      margin-left: 4px;
+      font-weight: bold;
+    }
+    .remove-color-button:hover {
+      background-color: #dc2626;
+    }
+
 
     .action-button {
       transition: background-color 0.3s ease, transform 0.2s ease;
@@ -473,7 +491,8 @@
 
 
     const itemColorCell = document.createElement('td');
-    itemColorCell.className = 'item-color-cell no-print text-center';
+    itemColorCell.className = 'item-color-cell no-print text-center flex items-center justify-center';
+
     const itemColorInput = document.createElement('input');
     itemColorInput.type = 'color';
     itemColorInput.className = 'item-color-picker';
@@ -489,6 +508,18 @@
       applyRowBackgrounds();
     });
     itemColorCell.appendChild(itemColorInput);
+
+    // Botão para remover a cor
+    const removeColorButton = document.createElement('button');
+    removeColorButton.className = 'remove-color-button';
+    removeColorButton.innerHTML = '&times;';
+    removeColorButton.title = 'Remover cor personalizada';
+    removeColorButton.onclick = function() {
+      itemColorInput.value = '#ffffff'; // Reseta o picker para branco
+      itemColorInput.dispatchEvent(new Event('input')); // Dispara o evento de input para salvar e atualizar
+    };
+    itemColorCell.appendChild(removeColorButton);
+
     taskRow.appendChild(itemColorCell);
 
     days.forEach((dayInfo, index) => {
