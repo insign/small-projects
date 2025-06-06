@@ -129,7 +129,7 @@
       body {
         background-color: #fff !important;
         margin: 0;
-        padding: 1cm; /* Margem da página */
+        padding: 0.5cm; /* Margem da página reduzida para ocupar mais espaço */
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
@@ -139,7 +139,7 @@
         display: none !important;
       }
 
-      /* Garante que o container da lista seja visível */
+      /* Garante que o container da lista seja visível e ocupe todo o espaço */
       .container, .task-list-section, .task-table-container {
         width: 100% !important;
         max-width: 100% !important;
@@ -151,9 +151,8 @@
 
       .task-table, .task-table th, .task-table td {
         border: 1px solid #666 !important; /* Bordas visíveis */
-        font-size: 9pt;
         padding: 4px 2px; /* Padding mínimo */
-        word-break: break-word;
+        word-break: break-word; /* Permite quebrar palavras longas se necessário */
       }
 
       .task-table th {
@@ -174,20 +173,9 @@
         text-align: center !important;
       }
 
-      .custom-checkbox {
-        width: 18px !important;
-        height: 18px !important;
-        border-width: 1px !important;
-        border-radius: 4px !important;
-      }
-      .custom-checkbox.checked::after {
-        font-size: 14px !important;
-      }
-
       .task-name-text {
         font-weight: normal;
         text-transform: uppercase;
-        font-size: 9pt; /* Garante tamanho consistente */
       }
 
       .task-row {
@@ -231,10 +219,14 @@
         </tbody>
       </table>
     </div>
-    <p id="no-tasks-message" class="text-center text-slate-500 mt-6">Nenhuma tarefa adicionada ainda. Clique em "Adicionar Tarefa" ou recarregue a página para ver exemplos.</p>
+    <p id="no-tasks-message" class="text-center text-slate-500 mt-6 hidden">Nenhuma tarefa adicionada ainda. Clique em "Adicionar Tarefa" ou recarregue a página para ver exemplos.</p>
   </section>
 
   <footer class="mt-10 text-center no-print">
+    <div class="flex justify-center items-center gap-4 mb-4">
+      <label for="print-font-size" class="text-sm font-medium text-slate-600">Fonte (Impressão):</label>
+      <input type="number" id="print-font-size" value="9" min="6" max="16" class="w-20 p-2 border border-slate-300 rounded-lg text-center">
+    </div>
     <button id="print-button"
             class="action-button bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md">
       Imprimir Lista
@@ -249,6 +241,7 @@
   const taskTableBody = document.getElementById('task-table-body');
   const printButton = document.getElementById('print-button');
   const noTasksMessage = document.getElementById('no-tasks-message');
+  const printFontSizeInput = document.getElementById('print-font-size');
 
   const dayNamesShort = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
   const monthNamesShort = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -341,7 +334,7 @@
       noTasksMessage.classList.remove('hidden');
       document.getElementById('task-table-container').classList.add('hidden');
     } else {
-      noTasksMessage.classList.remove('hidden');
+      noTasksMessage.classList.add('hidden');
       document.getElementById('task-table-container').classList.remove('hidden');
     }
   }
@@ -602,10 +595,53 @@
 
   // Listener do botão de impressão simplificado
   printButton.addEventListener('click', () => {
-    // A função applyRowBackgrounds() já é chamada sempre que os dados mudam,
-    // então as cores de fundo corretas (inline) já estarão aplicadas.
-    // O CSS @media print fará o resto.
+    const fontSize = printFontSizeInput.value;
+    if (!fontSize || fontSize < 6 || fontSize > 16) {
+      alert("Por favor, escolha um tamanho de fonte entre 6 e 16.");
+      return;
+    }
+
+    // Proporções para o checkbox com base no tamanho da fonte
+    const checkboxSize = fontSize * 2.0;
+    const checkmarkSize = fontSize * 1.5;
+
+    // Cria uma folha de estilo dinâmica para a impressão
+    const printStyles = `
+                @media print {
+                    :root {
+                        --print-font-size: ${fontSize}pt;
+                        --print-checkbox-size: ${checkboxSize}px;
+                        --print-checkmark-size: ${checkmarkSize}px;
+                    }
+                    /* Aplica os tamanhos de fonte e checkbox */
+                    .task-table, .task-table th, .task-table td, .task-name-text {
+                        font-size: var(--print-font-size) !important;
+                    }
+                    .custom-checkbox {
+                        width: var(--print-checkbox-size) !important;
+                        height: var(--print-checkbox-size) !important;
+                    }
+                    .custom-checkbox.checked::after {
+                        font-size: var(--print-checkmark-size) !important;
+                    }
+                }
+            `;
+
+    const styleSheet = document.createElement("style");
+    styleSheet.id = 'dynamic-print-style'; // Dá um ID para poder remover depois
+    styleSheet.innerText = printStyles;
+    document.head.appendChild(styleSheet);
+
+    // Chama a impressão
     window.print();
+
+    // Remove a folha de estilo dinâmica após a impressão para não afetar a tela
+    setTimeout(() => {
+      const styleElement = document.getElementById('dynamic-print-style');
+      if (styleElement) {
+        styleElement.remove();
+      }
+    }, 1000); // Atraso para garantir que a impressão foi processada
   });
 
 
