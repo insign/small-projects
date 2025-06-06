@@ -113,7 +113,7 @@
     }
     .custom-checkbox.checked {
       background-color: #ffffff;
-      border-color: #8b5cf6; /* Roxo vibrante */
+      border-color: transparent; /* A borda some ao marcar */
     }
     .custom-checkbox.checked::after {
       content: '';
@@ -140,24 +140,7 @@
     .item-color-picker::-webkit-color-swatch { border: none; border-radius: 3px; }
     .item-color-picker::-moz-color-swatch { border: none; border-radius: 3px; }
 
-    .remove-color-button {
-      background-color: #ef4444;
-      color: white;
-      border-radius: 50%;
-      width: 16px;
-      height: 16px;
-      font-size: 10px;
-      line-height: 16px;
-      text-align: center;
-      cursor: pointer;
-      border: none;
-      margin-left: 4px;
-      font-weight: bold;
-    }
-    .remove-color-button:hover {
-      background-color: #dc2626;
-    }
-
+    /* Botão de remover cor não é mais necessário */
 
     .action-button {
       transition: background-color 0.3s ease, transform 0.2s ease;
@@ -170,17 +153,15 @@
       body {
         background-color: #fff !important;
         margin: 0 !important;
-        padding: 0 !important; /* Remove padding para dar controle ao usuário */
+        padding: 0 !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
 
-      /* Oculta tudo que não for a lista */
       .no-print, header, .add-task-section, footer {
         display: none !important;
       }
 
-      /* Garante que o container da lista seja visível e ocupe todo o espaço */
       .container, .task-list-section, .task-table-container {
         width: 100% !important;
         max-width: 100% !important;
@@ -191,41 +172,40 @@
       }
 
       .task-table {
-        border-style: hidden; /* Remove a borda externa da tabela */
+        border-style: hidden;
         border-collapse: collapse;
       }
 
       .task-table th, .task-table td {
-        border: 1px solid #666 !important; /* Mantém apenas bordas internas */
-        padding: 4px 2px; /* Padding mínimo */
-        word-break: break-word; /* Permite quebrar palavras longas se necessário */
+        border: 1px solid #666 !important;
+        padding: 4px 2px;
+        word-break: break-word;
       }
 
       .task-table th {
         background-color: #e9e9e9 !important;
       }
 
-      /* Prioriza espaço para o nome da tarefa */
       .task-table th.task-name-header, .task-table td.task-name-cell {
-        width: 50% !important; /* Mais espaço para o nome da tarefa */
+        width: 50% !important;
         padding-left: 5px !important;
       }
 
-      /* Encolhe colunas de dias para o mínimo necessário */
       .task-table th.day-header, .task-table td.day-checkbox-cell {
         min-width: auto !important;
         width: auto !important;
-        padding: 4px 1px !important; /* Padding mínimo */
+        padding: 4px 1px !important;
         text-align: center !important;
       }
 
       .custom-checkbox.checked {
-        background-color: #fff !important; /* Garante fundo branco na impressão */
+        background-color: transparent !important;
+        border-color: transparent !important;
       }
       .custom-checkbox.checked::after {
         content: '' !important;
         display: block !important;
-        background-color: #5b21b6 !important; /* Roxo mais escuro para melhor contraste na impressão */
+        background-color: #5b21b6 !important;
         border-radius: 50% !important;
       }
 
@@ -385,7 +365,7 @@
 
     const deleteActionHeaderCell = document.createElement('th');
     deleteActionHeaderCell.className = 'no-print';
-    deleteActionHeaderCell.style.width = '90px'; // Aumenta a largura para caber os dois botões
+    deleteActionHeaderCell.style.width = '90px';
     deleteActionHeaderCell.style.paddingLeft = '0.3rem';
     deleteActionHeaderCell.style.paddingRight = '0.3rem';
     headerRow.appendChild(deleteActionHeaderCell);
@@ -459,7 +439,6 @@
     nameCell.appendChild(taskNameInput);
     taskRow.appendChild(nameCell);
 
-    // Lógica de edição inline
     taskNameText.addEventListener('click', () => {
       taskNameText.classList.add('hidden');
       taskNameInput.classList.remove('hidden');
@@ -491,13 +470,22 @@
 
 
     const itemColorCell = document.createElement('td');
-    itemColorCell.className = 'item-color-cell no-print text-center flex items-center justify-center';
+    itemColorCell.className = 'item-color-cell no-print text-center';
 
     const itemColorInput = document.createElement('input');
     itemColorInput.type = 'color';
     itemColorInput.className = 'item-color-picker';
     itemColorInput.value = task.backgroundColor || '#ffffff';
-    itemColorInput.title = 'Escolher cor de fundo da tarefa';
+    itemColorInput.title = 'Escolher ou remover cor';
+
+    itemColorInput.addEventListener('click', (event) => {
+      if(itemColorInput.value.toLowerCase() !== '#ffffff') {
+        event.preventDefault();
+        itemColorInput.value = '#ffffff';
+        itemColorInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+
     itemColorInput.addEventListener('input', (event) => {
       const tasks = getTasksFromStorage();
       const taskIndex = tasks.findIndex(t => t.id === task.id);
@@ -508,17 +496,6 @@
       applyRowBackgrounds();
     });
     itemColorCell.appendChild(itemColorInput);
-
-    // Botão para remover a cor
-    const removeColorButton = document.createElement('button');
-    removeColorButton.className = 'remove-color-button';
-    removeColorButton.innerHTML = '&times;';
-    removeColorButton.title = 'Remover cor personalizada';
-    removeColorButton.onclick = function() {
-      itemColorInput.value = '#ffffff'; // Reseta o picker para branco
-      itemColorInput.dispatchEvent(new Event('input')); // Dispara o evento de input para salvar e atualizar
-    };
-    itemColorCell.appendChild(removeColorButton);
 
     taskRow.appendChild(itemColorCell);
 
@@ -563,7 +540,6 @@
     const actionsCell = document.createElement('td');
     actionsCell.className = 'actions-cell no-print';
 
-    // Botão de Duplicar
     const duplicateButton = document.createElement('button');
     duplicateButton.className = 'duplicate-task-button text-blue-500 hover:text-blue-700 font-semibold p-1 rounded-md transition-colors';
     duplicateButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
@@ -575,16 +551,15 @@
         const taskToDuplicate = allTasks[taskIndex];
         const newTask = {
           ...taskToDuplicate,
-          id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Novo ID único
+          id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
         };
-        allTasks.splice(taskIndex + 1, 0, newTask); // Insere a cópia abaixo do original
+        allTasks.splice(taskIndex + 1, 0, newTask);
         localStorage.setItem('tasks', JSON.stringify(allTasks));
         loadTasksFromLocalStorage();
       }
     };
     actionsCell.appendChild(duplicateButton);
 
-    // Botão de Deletar
     const deleteButton = document.createElement('button');
     deleteButton.className = 'delete-task-button text-red-500 hover:text-red-700 font-semibold p-1 rounded-md transition-colors';
     deleteButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>`;
