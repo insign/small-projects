@@ -311,20 +311,27 @@
     return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
   }
 
-  function getNextSevenDays(startDate) {
+  function getNextSevenDays(startDateString) {
     const days = [];
-    const baseDate = startDate ? new Date(startDate + 'T00:00:00') : new Date();
-    if (!startDate) {
-      baseDate.setDate(baseDate.getDate() + 1); // Default to tomorrow if no start date
+    let baseDate;
+
+    if (startDateString) {
+      // Parse a data como UTC para evitar problemas de fuso horário
+      const [year, month, day] = startDateString.split('-').map(Number);
+      baseDate = new Date(Date.UTC(year, month - 1, day));
+    } else {
+      const today = new Date();
+      // Calcula amanhã com base na data local e depois cria em UTC para padronizar
+      baseDate = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate() + 1));
     }
 
     for (let i = 0; i < 7; i++) {
       const currentDate = new Date(baseDate);
-      currentDate.setDate(baseDate.getDate() + i);
+      currentDate.setUTCDate(baseDate.getUTCDate() + i);
       days.push({
-        dayName: dayNamesShort[currentDate.getDay()],
-        date: currentDate.getDate(),
-        month: monthNamesShort[currentDate.getMonth()],
+        dayName: dayNamesShort[currentDate.getUTCDay()],
+        date: currentDate.getUTCDate(),
+        month: monthNamesShort[currentDate.getUTCMonth()],
         fullDateString: currentDate.toISOString().split('T')[0]
       });
     }
@@ -337,7 +344,7 @@
     taskTableBody.innerHTML = '';
 
     const headerRow = document.createElement('tr');
-    // ... (criação do cabeçalho)
+
     const dragHeaderCell = document.createElement('th');
     dragHeaderCell.className = 'no-print';
     dragHeaderCell.style.width = '30px';
@@ -371,7 +378,6 @@
     headerRow.appendChild(actionsHeaderCell);
     taskTableHead.appendChild(headerRow);
 
-    // Carrega e renderiza as tarefas
     const tasks = getTasksFromStorage();
     tasks.forEach(task => {
       const taskRowElement = createTaskRow(task, calendarDates);
@@ -515,7 +521,7 @@
 
       const checkboxPlaceholder = document.createElement('div');
       checkboxPlaceholder.className = 'checkbox-placeholder custom-checkbox';
-      checkboxPlaceholder.dataset.date = dayInfo.fullDateString; // Armazena a data
+      checkboxPlaceholder.dataset.date = dayInfo.fullDateString;
 
       if (task.checkedDates && task.checkedDates.includes(dayInfo.fullDateString)) {
         checkboxPlaceholder.classList.add('checked');
