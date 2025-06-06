@@ -140,8 +140,6 @@
     .item-color-picker::-webkit-color-swatch { border: none; border-radius: 3px; }
     .item-color-picker::-moz-color-swatch { border: none; border-radius: 3px; }
 
-    /* Botão de remover cor não é mais necessário */
-
     .action-button {
       transition: background-color 0.3s ease, transform 0.2s ease;
     }
@@ -230,16 +228,19 @@
   </header>
 
   <section class="add-task-section mb-8 p-6 bg-slate-50 rounded-lg shadow no-print">
-    <h2 class="text-2xl font-semibold mb-4 text-slate-700">Adicionar Nova Tarefa</h2>
     <div class="flex flex-col sm:flex-row gap-4 items-end">
       <div class="flex-grow">
-        <label for="task-name-input" class="block text-sm font-medium text-slate-600 mb-1">Nome da Tarefa:</label>
+        <label for="task-name-input" class="block text-sm font-medium text-slate-600 mb-1">Nova Tarefa:</label>
         <input type="text" id="task-name-input" placeholder="Ex: Lavar a louça"
                class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow">
       </div>
+      <div class="flex-shrink-0">
+        <label for="calendar-start-date" class="block text-sm font-medium text-slate-600 mb-1">Dia Inicial:</label>
+        <input type="date" id="calendar-start-date" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500">
+      </div>
       <button id="add-task-button"
               class="action-button bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md w-full sm:w-auto">
-        Adicionar Tarefa
+        Adicionar
       </button>
     </div>
   </section>
@@ -256,7 +257,7 @@
         </tbody>
       </table>
     </div>
-    <p id="no-tasks-message" class="text-center text-slate-500 mt-6">Nenhuma tarefa adicionada ainda. Clique em "Adicionar Tarefa" ou recarregue a página para ver exemplos.</p>
+    <p id="no-tasks-message" class="text-center text-slate-500 mt-6">Nenhuma tarefa adicionada ainda. Clique em "Adicionar" ou recarregue a página para ver exemplos.</p>
   </section>
 
   <footer class="mt-10 text-center no-print">
@@ -288,10 +289,10 @@
   const exportButton = document.getElementById('export-button');
   const shareButton = document.getElementById('share-button');
   const importFileInput = document.getElementById('import-file-input');
+  const calendarStartDateInput = document.getElementById('calendar-start-date');
 
   const dayNamesShort = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
   const monthNamesShort = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-  let sevenDaysCache = [];
 
   function lightenHexColor(hex, percent) {
     if (!hex || typeof hex !== 'string') return 'var(--default-white-color)';
@@ -310,19 +311,16 @@
     return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
   }
 
-  function getNextSevenDays() {
-    if (sevenDaysCache.length > 0) {
-      const tomorrow = new Date();
-      tomorrow.setDate(new Date().getDate() + 1);
-      if (sevenDaysCache[0].fullDateString === tomorrow.toISOString().split('T')[0]) {
-        return sevenDaysCache;
-      }
-    }
+  function getNextSevenDays(startDate) {
     const days = [];
-    const today = new Date();
-    for (let i = 1; i <= 7; i++) {
-      const currentDate = new Date(today);
-      currentDate.setDate(today.getDate() + i);
+    const baseDate = startDate ? new Date(startDate + 'T00:00:00') : new Date();
+    if (!startDate) {
+      baseDate.setDate(baseDate.getDate() + 1); // Default to tomorrow if no start date
+    }
+
+    for (let i = 0; i < 7; i++) {
+      const currentDate = new Date(baseDate);
+      currentDate.setDate(baseDate.getDate() + i);
       days.push({
         dayName: dayNamesShort[currentDate.getDay()],
         date: currentDate.getDate(),
@@ -330,15 +328,16 @@
         fullDateString: currentDate.toISOString().split('T')[0]
       });
     }
-    sevenDaysCache = days;
     return days;
   }
 
-  function createTableHeader() {
+  function renderCalendar(startDate) {
+    const calendarDates = getNextSevenDays(startDate);
     taskTableHead.innerHTML = '';
-    const days = getNextSevenDays();
-    const headerRow = document.createElement('tr');
+    taskTableBody.innerHTML = '';
 
+    const headerRow = document.createElement('tr');
+    // ... (criação do cabeçalho)
     const dragHeaderCell = document.createElement('th');
     dragHeaderCell.className = 'no-print';
     dragHeaderCell.style.width = '30px';
@@ -357,21 +356,32 @@
     headerRow.appendChild(taskNameHeaderCell);
     headerRow.appendChild(colorHeaderCell);
 
-    days.forEach(dayInfo => {
+    calendarDates.forEach(dayInfo => {
       const dayHeaderCell = document.createElement('th');
       dayHeaderCell.className = 'day-header';
       dayHeaderCell.innerHTML = `${dayInfo.dayName}<br><span class="text-xs font-normal">${dayInfo.date}/${dayInfo.month}</span>`;
       headerRow.appendChild(dayHeaderCell);
     });
 
-    const deleteActionHeaderCell = document.createElement('th');
-    deleteActionHeaderCell.className = 'no-print';
-    deleteActionHeaderCell.style.width = '90px';
-    deleteActionHeaderCell.style.paddingLeft = '0.3rem';
-    deleteActionHeaderCell.style.paddingRight = '0.3rem';
-    headerRow.appendChild(deleteActionHeaderCell);
-
+    const actionsHeaderCell = document.createElement('th');
+    actionsHeaderCell.className = 'no-print';
+    actionsHeaderCell.style.width = '90px';
+    actionsHeaderCell.style.paddingLeft = '0.3rem';
+    actionsHeaderCell.style.paddingRight = '0.3rem';
+    headerRow.appendChild(actionsHeaderCell);
     taskTableHead.appendChild(headerRow);
+
+    // Carrega e renderiza as tarefas
+    const tasks = getTasksFromStorage();
+    tasks.forEach(task => {
+      const taskRowElement = createTaskRow(task, calendarDates);
+      if (taskRowElement) {
+        taskTableBody.appendChild(taskRowElement);
+      }
+    });
+
+    applyRowBackgrounds();
+    updateNoTasksMessage();
   }
 
   function updateNoTasksMessage() {
@@ -404,12 +414,11 @@
     });
   }
 
-  function createTaskRow(task) {
+  function createTaskRow(task, calendarDates) {
     if (!task.name || !task.name.trim()) {
       return null;
     }
 
-    const days = getNextSevenDays();
     const taskRow = document.createElement('tr');
     taskRow.className = 'task-row';
     taskRow.setAttribute('draggable', 'true');
@@ -500,13 +509,15 @@
 
     taskRow.appendChild(itemColorCell);
 
-    days.forEach((dayInfo, index) => {
+    calendarDates.forEach(dayInfo => {
       const dayCell = document.createElement('td');
       dayCell.className = 'day-checkbox-cell text-center';
 
       const checkboxPlaceholder = document.createElement('div');
       checkboxPlaceholder.className = 'checkbox-placeholder custom-checkbox';
-      if (task.daysChecked && task.daysChecked[index]) {
+      checkboxPlaceholder.dataset.date = dayInfo.fullDateString; // Armazena a data
+
+      if (task.checkedDates && task.checkedDates.includes(dayInfo.fullDateString)) {
         checkboxPlaceholder.classList.add('checked');
         checkboxPlaceholder.setAttribute('aria-checked', 'true');
       } else {
@@ -556,7 +567,7 @@
         };
         allTasks.splice(taskIndex + 1, 0, newTask);
         localStorage.setItem('tasks', JSON.stringify(allTasks));
-        loadTasksFromLocalStorage();
+        renderCalendar(calendarStartDateInput.value);
       }
     };
     actionsCell.appendChild(duplicateButton);
@@ -590,11 +601,13 @@
       const name = row.querySelector('.task-name-text').textContent;
       const itemColorPickerElement = row.querySelector('.item-color-picker');
       const backgroundColor = itemColorPickerElement ? itemColorPickerElement.value : '#ffffff';
-      const daysChecked = [];
-      row.querySelectorAll('.custom-checkbox').forEach(cb => {
-        daysChecked.push(cb.classList.contains('checked'));
+      const checkedDates = [];
+      row.querySelectorAll('.custom-checkbox.checked').forEach(cb => {
+        if (cb.dataset.date) {
+          checkedDates.push(cb.dataset.date);
+        }
       });
-      tasks.push({ id, name, daysChecked, backgroundColor });
+      tasks.push({ id, name, checkedDates, backgroundColor });
     });
     return tasks;
   }
@@ -604,29 +617,20 @@
     localStorage.setItem('tasks', JSON.stringify(tasks));
   }
 
-  function loadTasksFromLocalStorage() {
+  function loadInitialTasks() {
     let tasks = getTasksFromStorage();
 
     if (tasks.length === 0) {
       tasks = [
-        { id: `task-example-1`, name: "Lavar a Louça", daysChecked: Array(7).fill(false), backgroundColor: '#ffffff' },
-        { id: `task-example-2`, name: "Dobrar Roupas", daysChecked: Array(7).fill(false), backgroundColor: '#ffffff' },
-        { id: `task-example-3`, name: "Limpar o Banheiro", daysChecked: Array(7).fill(false), backgroundColor: '#ffffff' },
-        { id: `task-example-4`, name: "Passar Aspirador", daysChecked: Array(7).fill(false), backgroundColor: '#ffffff' },
-        { id: `task-example-5`, name: "Fazer Compras", daysChecked: Array(7).fill(false), backgroundColor: '#ffffff' }
+        { id: `task-example-1`, name: "Lavar a Louça", checkedDates: [], backgroundColor: '#ffffff' },
+        { id: `task-example-2`, name: "Dobrar Roupas", checkedDates: [], backgroundColor: '#ffffff' },
+        { id: `task-example-3`, name: "Limpar o Banheiro", checkedDates: [], backgroundColor: '#ffffff' },
+        { id: `task-example-4`, name: "Passar Aspirador", checkedDates: [], backgroundColor: '#ffffff' },
+        { id: `task-example-5`, name: "Fazer Compras", checkedDates: [], backgroundColor: '#ffffff' }
       ];
       localStorage.setItem('tasks', JSON.stringify(tasks));
     }
-
-    taskTableBody.innerHTML = '';
-    tasks.forEach(task => {
-      const taskRowElement = createTaskRow(task);
-      if (taskRowElement) {
-        taskTableBody.appendChild(taskRowElement);
-      }
-    });
-    applyRowBackgrounds();
-    updateNoTasksMessage();
+    renderCalendar(calendarStartDateInput.value);
   }
 
   let draggedItem = null;
@@ -685,7 +689,7 @@
     const newTask = {
       id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       name: taskNameValue,
-      daysChecked: Array(7).fill(false),
+      checkedDates: [],
       backgroundColor: '#ffffff'
     };
 
@@ -693,13 +697,8 @@
     currentTasks.push(newTask);
     localStorage.setItem('tasks', JSON.stringify(currentTasks));
 
-    const taskRowElement = createTaskRow(newTask);
-    if (taskRowElement) {
-      taskTableBody.appendChild(taskRowElement);
-    }
+    renderCalendar(calendarStartDateInput.value);
 
-    applyRowBackgrounds();
-    updateNoTasksMessage();
     taskNameInput.value = '';
     taskNameInput.focus();
   });
@@ -752,7 +751,7 @@
             printFontSizeInput.value = importedData.settings.printFontSize;
           }
 
-          loadTasksFromLocalStorage();
+          loadInitialTasks();
           alert('Dados importados com sucesso!');
         } else {
           throw new Error('Formato do arquivo JSON é inválido.');
@@ -839,21 +838,26 @@
     }, 1000);
   });
 
+  calendarStartDateInput.addEventListener('input', (event) => {
+    renderCalendar(event.target.value);
+  });
+
 
   function initializeApp() {
-    createTableHeader();
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    calendarStartDateInput.value = tomorrow.toISOString().split('T')[0];
 
     const savedFontSize = localStorage.getItem('printFontSize');
     if (savedFontSize) {
       printFontSizeInput.value = savedFontSize;
     }
 
-    // Verifica se a API de compartilhamento é suportada e mostra o botão
     if (navigator.share) {
       shareButton.classList.remove('hidden');
     }
 
-    loadTasksFromLocalStorage();
+    loadInitialTasks();
   }
 
   initializeApp();
