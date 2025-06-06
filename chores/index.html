@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista de Tarefas Semanal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --default-stripe-color: #f3f4f6; /* Cor da listra zebrada (slate-100) */
+      --default-white-color: #ffffff;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f0f2f5;
+    }
+
+    .task-table-container {
+      overflow-x: auto;
+    }
+
+    .task-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .task-table th,
+    .task-table td {
+      border: 1px solid #e2e8f0; /* slate-200 */
+      padding: 0.75rem 0.4rem;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    .task-table th {
+      background-color: #f8fafc; /* slate-50 */
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #475569; /* slate-600 */
+    }
+    .task-table th.task-name-header {
+      width: 35%;
+    }
+    .task-table th.task-color-header {
+      width: 70px;
+      text-align: center;
+    }
+    .task-table th.day-header {
+      text-align: center;
+      min-width: 90px;
+    }
+    .task-table td.task-name-cell {
+      padding-left: 0.6rem;
+      padding-right: 0.6rem;
+    }
+
+
+    .task-row {
+      transition: background-color 0.3s ease;
+    }
+
+    .task-row.dragging {
+      opacity: 0.6;
+      background-color: #c7d2fe !important;
+    }
+
+    .drag-handle {
+      cursor: grab;
+      padding-right: 0.5rem;
+      color: #94a3b8; /* slate-400 */
+    }
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .task-name-text {
+      text-transform: uppercase;
+    }
+
+    .custom-checkbox {
+      width: 32px;
+      height: 32px;
+      border: 2px solid #cbd5e1;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s, border-color 0.2s;
+      margin: auto;
+    }
+    .custom-checkbox.checked {
+      background-color: #4ade80;
+      border-color: #22c55e;
+    }
+    .custom-checkbox.checked::after {
+      content: '✔';
+      color: white;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .item-color-picker {
+      width: 32px;
+      height: 32px;
+      padding: 1px;
+      border: 1px solid #d1d5db;
+      border-radius: 5px;
+      cursor: pointer;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-color: transparent;
+    }
+    .item-color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+    .item-color-picker::-webkit-color-swatch { border: none; border-radius: 3px; }
+    .item-color-picker::-moz-color-swatch { border: none; border-radius: 3px; }
+
+
+    .action-button {
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    .action-button:hover { transform: translateY(-2px); }
+    .action-button:active { transform: translateY(0px); }
+
+    /* Estilos de Impressão */
+    @media print {
+      body {
+        background-color: #fff !important; /* Força fundo branco */
+        margin: 10px;
+        -webkit-print-color-adjust: exact !important; /* Força cores de fundo no Chrome/Safari */
+        print-color-adjust: exact !important; /* Força cores de fundo (padrão) */
+      }
+      .no-print { display: none !important; }
+      .task-table-container { overflow-x: visible; }
+      .task-table, .task-table th, .task-table td {
+        border: 1.5px solid #888 !important; /* Bordas mais grossas e escuras */
+        font-size: 8pt; /* Fonte ainda menor para mais espaço */
+        padding: 0.2rem 0.1rem; /* Padding mínimo */
+        word-break: break-word; /* Permite quebrar palavras longas se necessário */
+      }
+      .task-table th {
+        background-color: #e9e9e9 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .task-table th.task-name-header {
+        width: 45% !important; /* Mais espaço para o nome da tarefa */
+      }
+      .task-table th.day-header, .task-table td.day-checkbox-cell {
+        min-width: auto !important; /* Remove min-width para encolher */
+        width: auto !important;    /* Permite encolher */
+        padding: 0.2rem 0.1rem !important; /* Padding mínimo */
+      }
+      .custom-checkbox {
+        width: 22px !important;
+        height: 22px !important;
+        border-width: 1px !important;
+        border-radius: 5px !important;
+      }
+      .custom-checkbox.checked::after {
+        font-size: 15px !important;
+      }
+      .task-name-text { font-weight: normal; text-transform: uppercase; }
+      h1.main-title { text-align: center; color: #000; margin-bottom: 15px; font-size: 1.4rem;}
+      .container { box-shadow: none; border: none; }
+      .add-task-section { display: none; }
+      .task-row { /* Tenta forçar a cor de fundo na impressão direta */
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
+    /* Estilos para a Janela de Visualização de Impressão */
+    .print-preview-body {
+      margin: 15px;
+      background-color: #fff !important;
+      font-family: 'Inter', sans-serif;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .print-preview-body .task-table,
+    .print-preview-body .task-table th,
+    .print-preview-body .task-table td {
+      border: 1.5px solid #777 !important; /* Bordas mais grossas */
+      font-size: 8.5pt;
+      padding: 0.25rem 0.15rem;
+      word-break: break-word;
+    }
+    .print-preview-body .task-table th {
+      background-color: #f0f0f0 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .print-preview-body .task-table th.task-name-header {
+      width: 45% !important;
+    }
+    .print-preview-body .task-table th.day-header,
+    .print-preview-body .task-table td.day-checkbox-cell {
+      min-width: auto !important;
+      width: auto !important;
+      padding: 0.25rem 0.1rem !important;
+    }
+    .print-preview-body .custom-checkbox {
+      width: 24px !important;
+      height: 24px !important;
+      border-width: 1px !important;
+      border-radius: 6px !important;
+    }
+    .print-preview-body .custom-checkbox.checked::after {
+      font-size: 17px !important;
+    }
+    .print-preview-body .task-name-text { font-weight: normal; text-transform: uppercase; }
+    .print-preview-body h1.print-title { text-align: center; color: #000; margin-bottom: 15px; font-size: 1.5rem; }
+    .print-preview-body .no-print { display: none !important; }
+    body.print-preview-body .task-row {
+      background-color: transparent !important; /* Base para JS aplicar */
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    body.print-preview-body .task-color-header,
+    body.print-preview-body .item-color-cell {
+      display: none !important;
+    }
+
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 p-4 md:p-8">
+<div class="container max-w-6xl mx-auto bg-white p-6 md:p-8 rounded-xl shadow-2xl">
+  <header class="mb-8 text-center">
+    <h1 class="text-3xl md:text-4xl font-bold text-sky-600 main-title">Minha Lista de Tarefas Semanal</h1>
+  </header>
+
+  <section class="add-task-section mb-8 p-6 bg-slate-50 rounded-lg shadow no-print">
+    <h2 class="text-2xl font-semibold mb-4 text-slate-700">Adicionar Nova Tarefa</h2>
+    <div class="flex flex-col sm:flex-row gap-4 items-end">
+      <div class="flex-grow">
+        <label for="task-name-input" class="block text-sm font-medium text-slate-600 mb-1">Nome da Tarefa:</label>
+        <input type="text" id="task-name-input" placeholder="Ex: Lavar a louça"
+               class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow">
+      </div>
+      <button id="add-task-button"
+              class="action-button bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md w-full sm:w-auto">
+        Adicionar Tarefa
+      </button>
+    </div>
+  </section>
+
+  <section class="task-list-section">
+    <h2 class="text-2xl font-semibold mb-4 text-slate-700 sr-only print:not-sr-only print:text-center print:mb-4">Tarefas</h2>
+    <div id="task-table-container" class="task-table-container bg-white rounded-lg shadow">
+      <table class="task-table">
+        <thead id="task-table-head">
+        <!-- Cabeçalho -->
+        </thead>
+        <tbody id="task-table-body">
+        <!-- Tarefas -->
+        </tbody>
+      </table>
+    </div>
+    <p id="no-tasks-message" class="text-center text-slate-500 mt-6 hidden">Nenhuma tarefa adicionada ainda. Clique em "Adicionar Tarefa" ou recarregue a página para ver exemplos.</p>
+  </section>
+
+  <footer class="mt-10 text-center no-print">
+    <button id="print-preview-button"
+            class="action-button bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md">
+      Visualizar Impressão
+    </button>
+  </footer>
+</div>
+
+<script>
+  const taskNameInput = document.getElementById('task-name-input');
+  const addTaskButton = document.getElementById('add-task-button');
+  const taskTableHead = document.getElementById('task-table-head');
+  const taskTableBody = document.getElementById('task-table-body');
+  const printPreviewButton = document.getElementById('print-preview-button');
+  const noTasksMessage = document.getElementById('no-tasks-message');
+
+  const dayNamesShort = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const monthNamesShort = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+  let sevenDaysCache = [];
+
+  function lightenHexColor(hex, percent) {
+    if (!hex || typeof hex !== 'string') return 'var(--default-white-color)';
+    hex = hex.replace(/^#/, '');
+    if (hex.length === 3) hex = hex.split('').map(char => char + char).join('');
+    if (hex.length !== 6) return 'var(--default-white-color)';
+
+    let r = parseInt(hex.substring(0, 2), 16);
+    let g = parseInt(hex.substring(2, 4), 16);
+    let b = parseInt(hex.substring(4, 6), 16);
+
+    r = Math.min(255, r + Math.floor((255 - r) * (percent / 100)));
+    g = Math.min(255, g + Math.floor((255 - g) * (percent / 100)));
+    b = Math.min(255, b + Math.floor((255 - b) * (percent / 100)));
+
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  }
+
+  function getNextSevenDays() {
+    if (sevenDaysCache.length > 0) {
+      const tomorrow = new Date();
+      tomorrow.setDate(new Date().getDate() + 1);
+      if (sevenDaysCache[0].fullDateString === tomorrow.toISOString().split('T')[0]) {
+        return sevenDaysCache;
+      }
+    }
+    const days = [];
+    const today = new Date();
+    for (let i = 1; i <= 7; i++) {
+      const currentDate = new Date(today);
+      currentDate.setDate(today.getDate() + i);
+      days.push({
+        dayName: dayNamesShort[currentDate.getDay()],
+        date: currentDate.getDate(),
+        month: monthNamesShort[currentDate.getMonth()],
+        fullDateString: currentDate.toISOString().split('T')[0]
+      });
+    }
+    sevenDaysCache = days;
+    return days;
+  }
+
+  function createTableHeader() {
+    taskTableHead.innerHTML = '';
+    const days = getNextSevenDays();
+    const headerRow = document.createElement('tr');
+
+    const dragHeaderCell = document.createElement('th');
+    dragHeaderCell.className = 'no-print';
+    dragHeaderCell.style.width = '30px';
+    dragHeaderCell.style.paddingLeft = '0.3rem';
+    dragHeaderCell.style.paddingRight = '0.3rem';
+
+
+    const taskNameHeaderCell = document.createElement('th');
+    taskNameHeaderCell.className = 'task-name-header';
+    taskNameHeaderCell.textContent = 'Tarefa';
+
+    const colorHeaderCell = document.createElement('th');
+    colorHeaderCell.className = 'task-color-header no-print';
+    colorHeaderCell.textContent = 'Cor';
+
+    headerRow.appendChild(dragHeaderCell);
+    headerRow.appendChild(taskNameHeaderCell);
+    headerRow.appendChild(colorHeaderCell);
+
+    days.forEach(dayInfo => {
+      const dayHeaderCell = document.createElement('th');
+      dayHeaderCell.className = 'day-header';
+      dayHeaderCell.innerHTML = `${dayInfo.dayName}<br><span class="text-xs font-normal">${dayInfo.date}/${dayInfo.month}</span>`;
+      headerRow.appendChild(dayHeaderCell);
+    });
+
+    const deleteActionHeaderCell = document.createElement('th');
+    deleteActionHeaderCell.className = 'no-print';
+    deleteActionHeaderCell.style.width = '50px';
+    deleteActionHeaderCell.style.paddingLeft = '0.3rem';
+    deleteActionHeaderCell.style.paddingRight = '0.3rem';
+    headerRow.appendChild(deleteActionHeaderCell);
+
+    taskTableHead.appendChild(headerRow);
+  }
+
+  function updateNoTasksMessage() {
+    const tasks = getTasksFromStorage();
+    if (tasks.length === 0) {
+      noTasksMessage.classList.remove('hidden');
+      document.getElementById('task-table-container').classList.add('hidden');
+    } else {
+      noTasksMessage.classList.add('hidden');
+      document.getElementById('task-table-container').classList.remove('hidden');
+    }
+  }
+
+  function applyRowBackgrounds(isForPrint = false) {
+    const targetBody = isForPrint ? printWindow.document.querySelector('.task-table tbody') : taskTableBody;
+    if (!targetBody) return;
+
+    const taskRows = targetBody.querySelectorAll('.task-row');
+    const tasksData = getTasksFromStorage(); // Sempre pega do localStorage para consistência
+
+    taskRows.forEach((row, index) => {
+      const taskData = tasksData.find(t => t.id === row.id);
+      let backgroundColorToApply = 'var(--default-white-color)';
+
+      if (taskData && taskData.backgroundColor && taskData.backgroundColor.toLowerCase() !== '#ffffff') {
+        backgroundColorToApply = lightenHexColor(taskData.backgroundColor, 75);
+      } else {
+        if (index % 2 !== 0) {
+          backgroundColorToApply = 'var(--default-stripe-color)';
+        }
+      }
+      row.style.backgroundColor = backgroundColorToApply;
+      // Forçar estilos para impressão, se aplicável
+      if (isForPrint || (window.matchMedia && window.matchMedia('print').matches)) {
+        row.style.setProperty('background-color', backgroundColorToApply, 'important');
+        row.style.setProperty('-webkit-print-color-adjust', 'exact', 'important');
+        row.style.setProperty('print-color-adjust', 'exact', 'important');
+      }
+    });
+  }
+
+
+  function createTaskRow(task) {
+    if (!task.name || !task.name.trim()) {
+      return null;
+    }
+
+    const days = getNextSevenDays();
+    const taskRow = document.createElement('tr');
+    taskRow.className = 'task-row';
+    taskRow.setAttribute('draggable', 'true');
+    taskRow.id = task.id;
+
+    const dragHandleCell = document.createElement('td');
+    dragHandleCell.className = 'drag-handle-cell no-print';
+    const dragHandle = document.createElement('span');
+    dragHandle.className = 'drag-handle';
+    dragHandle.innerHTML = '&#x2630;';
+    dragHandle.title = "Arraste para reordenar";
+    dragHandleCell.appendChild(dragHandle);
+    taskRow.appendChild(dragHandleCell);
+
+    const nameCell = document.createElement('td');
+    nameCell.className = 'task-name-cell';
+    const taskNameText = document.createElement('span');
+    taskNameText.className = 'task-name-text text-slate-700 font-medium break-words';
+    taskNameText.textContent = task.name;
+    nameCell.appendChild(taskNameText);
+    taskRow.appendChild(nameCell);
+
+    const itemColorCell = document.createElement('td');
+    itemColorCell.className = 'item-color-cell no-print text-center';
+    const itemColorInput = document.createElement('input');
+    itemColorInput.type = 'color';
+    itemColorInput.className = 'item-color-picker';
+    itemColorInput.value = task.backgroundColor || '#ffffff';
+    itemColorInput.title = 'Escolher cor de fundo da tarefa';
+    itemColorInput.addEventListener('input', (event) => {
+      const tasks = getTasksFromStorage();
+      const taskIndex = tasks.findIndex(t => t.id === task.id);
+      if (taskIndex > -1) {
+        tasks[taskIndex].backgroundColor = event.target.value;
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+      }
+      applyRowBackgrounds();
+    });
+    itemColorCell.appendChild(itemColorInput);
+    taskRow.appendChild(itemColorCell);
+
+    days.forEach((dayInfo, index) => {
+      const dayCell = document.createElement('td');
+      dayCell.className = 'day-checkbox-cell text-center';
+
+      const checkboxPlaceholder = document.createElement('div');
+      checkboxPlaceholder.className = 'checkbox-placeholder custom-checkbox';
+      if (task.daysChecked && task.daysChecked[index]) {
+        checkboxPlaceholder.classList.add('checked');
+        checkboxPlaceholder.setAttribute('aria-checked', 'true');
+      } else {
+        checkboxPlaceholder.setAttribute('aria-checked', 'false');
+      }
+      checkboxPlaceholder.setAttribute('tabindex', '0');
+      const checkboxId = `${task.id}-day-${dayInfo.fullDateString}`;
+      checkboxPlaceholder.setAttribute('aria-labelledby', checkboxId);
+
+      const hiddenLabel = document.createElement('label');
+      hiddenLabel.id = checkboxId;
+      hiddenLabel.className = 'sr-only';
+      hiddenLabel.textContent = `Marcar tarefa ${task.name} para ${dayInfo.dayName} ${dayInfo.date}/${dayInfo.month}`;
+
+      checkboxPlaceholder.onclick = function() {
+        this.classList.toggle('checked');
+        this.setAttribute('aria-checked', this.classList.contains('checked') ? 'true' : 'false');
+        saveTasksToLocalStorage();
+      };
+      checkboxPlaceholder.onkeydown = function(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          this.click();
+        }
+      };
+
+      dayCell.appendChild(checkboxPlaceholder);
+      dayCell.appendChild(hiddenLabel);
+      taskRow.appendChild(dayCell);
+    });
+
+    const deleteCell = document.createElement('td');
+    deleteCell.className = 'delete-button-cell no-print text-center';
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'delete-task-button text-red-500 hover:text-red-700 font-semibold py-1 px-2 rounded-md transition-colors';
+    deleteButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>`;
+    deleteButton.setAttribute('aria-label', `Excluir tarefa ${task.name}`);
+    deleteButton.onclick = function() {
+      taskRow.remove();
+      saveTasksToLocalStorage();
+      applyRowBackgrounds();
+      updateNoTasksMessage();
+    };
+    deleteCell.appendChild(deleteButton);
+    taskRow.appendChild(deleteCell);
+
+    return taskRow;
+  }
+
+  function getTasksFromStorage() {
+    return JSON.parse(localStorage.getItem('tasks')) || [];
+  }
+
+  function getTasksFromDOM() {
+    const tasks = [];
+    const taskRows = taskTableBody.querySelectorAll('.task-row');
+    taskRows.forEach(row => {
+      const id = row.id;
+      const name = row.querySelector('.task-name-text').textContent;
+      const itemColorPickerElement = row.querySelector('.item-color-picker');
+      const backgroundColor = itemColorPickerElement ? itemColorPickerElement.value : '#ffffff';
+      const daysChecked = [];
+      row.querySelectorAll('.custom-checkbox').forEach(cb => {
+        daysChecked.push(cb.classList.contains('checked'));
+      });
+      tasks.push({ id, name, daysChecked, backgroundColor });
+    });
+    return tasks;
+  }
+
+  function saveTasksToLocalStorage() {
+    const tasks = getTasksFromDOM();
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  }
+
+  function loadTasksFromLocalStorage() {
+    let tasks = getTasksFromStorage();
+
+    if (tasks.length === 0) {
+      tasks = [
+        { id: `task-example-1`, name: "Lavar a Louça", daysChecked: Array(7).fill(false), backgroundColor: '#ffffff' },
+        { id: `task-example-2`, name: "Dobrar Roupas", daysChecked: Array(7).fill(false), backgroundColor: '#ffffff' },
+        { id: `task-example-3`, name: "Limpar o Banheiro", daysChecked: Array(7).fill(false), backgroundColor: '#ffffff' },
+        { id: `task-example-4`, name: "Passar Aspirador", daysChecked: Array(7).fill(false), backgroundColor: '#ffffff' },
+        { id: `task-example-5`, name: "Fazer Compras", daysChecked: Array(7).fill(false), backgroundColor: '#ffffff' }
+      ];
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    taskTableBody.innerHTML = '';
+    tasks.forEach(task => {
+      const taskRowElement = createTaskRow(task);
+      if (taskRowElement) {
+        taskTableBody.appendChild(taskRowElement);
+      }
+    });
+    applyRowBackgrounds();
+    updateNoTasksMessage();
+  }
+
+  let draggedItem = null;
+  taskTableBody.addEventListener('dragstart', (e) => {
+    if (e.target.classList.contains('task-row')) {
+      draggedItem = e.target;
+      setTimeout(() => { e.target.classList.add('dragging'); }, 0);
+    }
+  });
+  taskTableBody.addEventListener('dragend', (e) => {
+    if (draggedItem && e.target.classList.contains('task-row')) {
+      setTimeout(() => {
+        draggedItem.classList.remove('dragging');
+        draggedItem = null;
+        saveTasksToLocalStorage();
+        applyRowBackgrounds();
+      }, 0);
+    }
+  });
+  taskTableBody.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const afterElement = getDragAfterElement(taskTableBody, e.clientY);
+    if (draggedItem) {
+      if (afterElement == null) {
+        taskTableBody.appendChild(draggedItem);
+      } else {
+        taskTableBody.insertBefore(draggedItem, afterElement);
+      }
+    }
+  });
+  function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.task-row:not(.dragging)')];
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+
+  addTaskButton.addEventListener('click', () => {
+    const taskNameValue = taskNameInput.value;
+    if (!taskNameValue.trim()) {
+      taskNameInput.classList.add('border-red-500');
+      taskNameInput.placeholder = "Nome da tarefa não pode ser vazio!";
+      setTimeout(() => {
+        taskNameInput.classList.remove('border-red-500');
+        taskNameInput.placeholder = "Ex: Lavar a louça";
+      }, 2000);
+      taskNameInput.focus();
+      return;
+    }
+    const newTask = {
+      id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      name: taskNameValue,
+      daysChecked: Array(7).fill(false),
+      backgroundColor: '#ffffff'
+    };
+
+    const currentTasks = getTasksFromStorage();
+    currentTasks.push(newTask);
+    localStorage.setItem('tasks', JSON.stringify(currentTasks));
+
+    const taskRowElement = createTaskRow(newTask);
+    if (taskRowElement) {
+      taskTableBody.appendChild(taskRowElement);
+    }
+
+    applyRowBackgrounds();
+    updateNoTasksMessage();
+    taskNameInput.value = '';
+    taskNameInput.focus();
+  });
+
+  taskNameInput.addEventListener('keypress', (event) => {
+    if (event.key === 'Enter') {
+      addTaskButton.click();
+    }
+  });
+
+  // Variável global para a janela de impressão para que applyRowBackgrounds possa acessá-la
+  let printWindow = null;
+
+  printPreviewButton.addEventListener('click', () => {
+    const tableContainerClone = document.getElementById('task-table-container').cloneNode(true);
+    const mainTitleClone = document.querySelector('h1.main-title').cloneNode(true);
+    mainTitleClone.classList.add('print-title');
+    mainTitleClone.classList.remove('text-3xl', 'md:text-4xl', 'text-sky-600');
+
+    let styles = "";
+    document.querySelectorAll('style, link[rel="stylesheet"]').forEach(styleElement => {
+      if (styleElement.tagName === 'STYLE') {
+        styles += `<style>${styleElement.innerHTML}</style>`;
+      } else if (styleElement.tagName === 'LINK' && styleElement.href) {
+        styles += `<link rel="stylesheet" href="${styleElement.href}">`;
+      }
+    });
+
+    printWindow = window.open('', '_blank'); // Atribui à variável global
+    if (!printWindow) {
+      alert('Por favor, permita pop-ups para este site para visualizar a impressão.');
+      return;
+    }
+
+    printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Visualização de Impressão - ${mainTitleClone.textContent}</title>
+                    ${styles}
+                </head>
+                <body class="print-preview-body">
+                    ${mainTitleClone.outerHTML}
+                    ${tableContainerClone.outerHTML}
+                    <script>
+                        // Aplica as cores de fundo corretas na janela de visualização
+                        // Esta função precisa ser definida ou acessível na janela de visualização
+                        // Para simplificar, vamos recriar a lógica de applyRowBackgrounds aqui,
+                        // mas focada em pegar dados do 'opener' (janela original).
+
+                        function lightenHexColorPreview(hex, percent) {
+                            // ... (cópia da função lightenHexColor)
+                            if (!hex || typeof hex !== 'string') return '#ffffff';
+                            hex = hex.replace(/^#/, '');
+                            if (hex.length === 3) hex = hex.split('').map(char => char + char).join('');
+                            if (hex.length !== 6) return '#ffffff';
+                            let r = parseInt(hex.substring(0, 2), 16);
+                            let g = parseInt(hex.substring(2, 4), 16);
+                            let b = parseInt(hex.substring(4, 6), 16);
+                            r = Math.min(255, r + Math.floor((255 - r) * (percent / 100)));
+                            g = Math.min(255, g + Math.floor((255 - g) * (percent / 100)));
+                            b = Math.min(255, b + Math.floor((255 - b) * (percent / 100)));
+                            return \`#\${r.toString(16).padStart(2, '0')}\${g.toString(16).padStart(2, '0')}\${b.toString(16).padStart(2, '0')}\`;
+                        }
+
+                        function applyBackgroundsInPreview() {
+                            const previewTableBody = document.querySelector('.task-table tbody');
+                            if (!previewTableBody) return;
+
+                            const previewTaskRows = previewTableBody.querySelectorAll('.task-row');
+                            // Tenta pegar as tarefas do localStorage da janela que abriu (opener)
+                            let tasksData = [];
+                            try {
+                                tasksData = JSON.parse(window.opener.localStorage.getItem('tasks')) || [];
+                            } catch (e) {
+                                console.error("Não foi possível acessar o localStorage da janela original.", e);
+                                // Como fallback, poderia tentar ler do DOM da janela original, mas é mais complexo
+                            }
+
+                            previewTaskRows.forEach((row, index) => {
+                                const taskData = tasksData.find(t => t.id === row.id);
+                                let backgroundColorToApply = '#ffffff'; // Padrão branco
+
+                                if (taskData && taskData.backgroundColor && taskData.backgroundColor.toLowerCase() !== '#ffffff') {
+                                    backgroundColorToApply = lightenHexColorPreview(taskData.backgroundColor, 75);
+                                } else {
+                                    if (index % 2 !== 0) {
+                                        backgroundColorToApply = '#f3f4f6'; // Cor zebrada padrão
+                                    }
+                                }
+                                row.style.backgroundColor = backgroundColorToApply;
+                                row.style.setProperty('-webkit-print-color-adjust', 'exact', 'important');
+                                row.style.setProperty('print-color-adjust', 'exact', 'important');
+                            });
+                        }
+
+                        // Copiar estado dos checkboxes
+                        const originalTableBody = window.opener.document.getElementById('task-table-body');
+                        const newTableBody = document.querySelector('.task-table tbody');
+                        if (originalTableBody && newTableBody && originalTableBody.rows.length === newTableBody.rows.length) {
+                            for (let i = 0; i < originalTableBody.rows.length; i++) {
+                                const originalRowCheckboxes = originalTableBody.rows[i].querySelectorAll('.custom-checkbox');
+                                const newRowCheckboxes = newTableBody.rows[i].querySelectorAll('.custom-checkbox');
+                                if (originalRowCheckboxes.length === newRowCheckboxes.length) {
+                                    originalRowCheckboxes.forEach((cb, indexCb) => {
+                                        if (cb.classList.contains('checked')) {
+                                            newRowCheckboxes[indexCb].classList.add('checked');
+                                            newRowCheckboxes[indexCb].setAttribute('aria-checked', 'true');
+                                        }
+                                    });
+                                }
+                            }
+                        }
+
+                        window.onload = function() {
+                            applyBackgroundsInPreview(); // Aplica fundos antes de tentar imprimir
+                            window.focus();
+                            // Descomente a linha abaixo para tentar abrir o diálogo de impressão automaticamente.
+                            // setTimeout(() => { window.print(); }, 500);
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+    printWindow.document.close(); // Importante para finalizar o carregamento do documento na nova janela
+  });
+
+  function initializeApp() {
+    createTableHeader();
+    loadTasksFromLocalStorage();
+  }
+
+  initializeApp();
+
+</script>
+</body>
+</html>
