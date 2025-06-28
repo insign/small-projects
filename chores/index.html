@@ -3,11 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tarefas da Semana (Vue.js)</title>
+  <title>Tarefas da Semana</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Import Vue 3 -->
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <style>
     :root {
       --default-stripe-color: #e2e8f0; /* Cor da listra zebrada (slate-200) */
@@ -17,39 +15,81 @@
       font-family: 'Inter', sans-serif;
       background-color: #f0f2f5;
     }
-    .task-table-container { overflow-x: auto; }
-    .task-table { width: 100%; border-collapse: collapse; }
-    .task-table th, .task-table td {
-      border: 1px solid #e2e8f0;
+
+    .task-table-container {
+      overflow-x: auto;
+    }
+
+    .task-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .task-table th,
+    .task-table td {
+      border: 1px solid #e2e8f0; /* slate-200 */
       padding: 0.75rem 0.4rem;
       text-align: left;
       vertical-align: middle;
     }
+
     .task-table th {
-      background-color: #f8fafc;
+      background-color: #f8fafc; /* slate-50 */
       font-weight: 600;
       font-size: 0.875rem;
-      color: #475569;
+      color: #475569; /* slate-600 */
     }
-    .task-table th.task-name-header { width: 35%; }
-    .task-table th.task-color-header { width: 70px; text-align: center; }
-    .task-table th.day-header { text-align: center; min-width: 90px; }
+    .task-table th.task-name-header {
+      width: 35%;
+    }
+    .task-table th.task-color-header {
+      width: 70px;
+      text-align: center;
+    }
+    .task-table th.day-header {
+      text-align: center;
+      min-width: 90px;
+    }
     .task-table td.task-name-cell {
       padding-left: 0.6rem;
       padding-right: 0.6rem;
       transition: background-color 0.3s ease;
     }
-    .task-table td.actions-cell { display: flex; align-items: center; gap: 2px; }
+    .task-table td.actions-cell {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
 
-    .task-row { transition: background-color 0.3s ease; }
-    .task-row.dragging { opacity: 0.6; background-color: #c7d2fe !important; }
-    .task-row.dragging .task-name-cell { background-color: transparent !important; }
 
-    .drag-handle { cursor: grab; padding-right: 0.5rem; color: #94a3b8; }
-    .drag-handle:active { cursor: grabbing; }
+    .task-row {
+      transition: background-color 0.3s ease;
+    }
 
-    .task-name-text { text-transform: uppercase; cursor: pointer; }
-    .task-name-text:hover { background-color: #f0f9ff; }
+    .task-row.dragging {
+      opacity: 0.6;
+      background-color: #c7d2fe !important;
+    }
+    .task-row.dragging .task-name-cell {
+      background-color: transparent !important;
+    }
+
+    .drag-handle {
+      cursor: grab;
+      padding-right: 0.5rem;
+      color: #94a3b8; /* slate-400 */
+    }
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .task-name-text {
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .task-name-text:hover {
+      background-color: #f0f9ff; /* sky-50 */
+    }
 
     .task-name-edit-input {
       font-family: 'Inter', sans-serif;
@@ -62,476 +102,715 @@
       padding: 2px 4px;
     }
 
+
     .custom-checkbox {
-      width: 32px; height: 32px;
+      width: 32px;
+      height: 32px;
       border: 2px solid #cbd5e1;
       border-radius: 8px;
       cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: background-color 0.2s, border-color 0.2s;
       margin: auto;
     }
-    .custom-checkbox.checked { background-color: transparent; border-color: transparent; }
+    .custom-checkbox.checked {
+      background-color: transparent;
+      border-color: transparent;
+    }
     .custom-checkbox.checked::after {
       content: '';
       display: block;
-      width: 20px; height: 20px;
+      width: 20px;
+      height: 20px;
       background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dc2626' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cline x1='18' y1='6' x2='6' y2='18'/%3e%3cline x1='6' y1='6' x2='18' y2='18'/%3e%3c/svg%3e");
-      background-size: contain; background-repeat: no-repeat; background-position: center;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
     }
 
     .item-color-picker {
-      width: 32px; height: 32px;
+      width: 32px;
+      height: 32px;
       padding: 1px;
       border: 1px solid #d1d5db;
       border-radius: 5px;
       cursor: pointer;
-      -webkit-appearance: none; -moz-appearance: none; appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
       background-color: transparent;
     }
     .item-color-picker::-webkit-color-swatch-wrapper { padding: 0; }
     .item-color-picker::-webkit-color-swatch { border: none; border-radius: 3px; }
     .item-color-picker::-moz-color-swatch { border: none; border-radius: 3px; }
 
-    .action-button { transition: background-color 0.3s ease, transform 0.2s ease; }
+    .action-button {
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
     .action-button:hover { transform: translateY(-2px); }
     .action-button:active { transform: translateY(0px); }
 
-    [v-cloak] { display: none; }
-
+    /* REGRAS DE IMPRESSÃO OTIMIZADAS */
     @media print {
       body {
-        background-color: #fff !important; margin: 0 !important; padding: 0 !important;
-        -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+        background-color: #fff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
-      .no-print, header, .add-task-section, footer { display: none !important; }
+
+      .no-print, header, .add-task-section, footer {
+        display: none !important;
+      }
+
       .container, .task-list-section, .task-table-container {
-        width: 100% !important; max-width: 100% !important;
-        box-shadow: none !important; border: none !important;
-        padding: 0 !important; margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
       }
-      .task-table { border-style: hidden; border-collapse: collapse; }
-      .task-table th, .task-table td { border: 1px solid #666 !important; padding: 4px 2px; word-break: break-word; }
-      .task-table th { background-color: #e9e9e9 !important; }
-      .task-table th.task-name-header, .task-table td.task-name-cell { width: 50% !important; padding-left: 5px !important; }
+
+      .task-table {
+        border-style: hidden;
+        border-collapse: collapse;
+      }
+
+      .task-table th, .task-table td {
+        border: 1px solid #666 !important;
+        padding: 4px 2px;
+        word-break: break-word;
+      }
+
+      .task-table th {
+        background-color: #e9e9e9 !important;
+      }
+
+      .task-table th.task-name-header, .task-table td.task-name-cell {
+        width: 50% !important;
+        padding-left: 5px !important;
+      }
+
       .task-table th.day-header, .task-table td.day-checkbox-cell {
-        min-width: auto !important; width: auto !important;
-        padding: 4px 1px !important; text-align: center !important;
+        min-width: auto !important;
+        width: auto !important;
+        padding: 4px 1px !important;
+        text-align: center !important;
       }
-      .custom-checkbox.checked { background-color: transparent !important; border-color: transparent !important; }
+
+      .custom-checkbox.checked {
+        background-color: transparent !important;
+        border-color: transparent !important;
+      }
       .custom-checkbox.checked::after {
-        content: '' !important; display: block !important;
-        width: 80% !important; height: 80% !important;
+        content: '' !important;
+        display: block !important;
+        width: 80% !important;
+        height: 80% !important;
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dc2626' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cline x1='18' y1='6' x2='6' y2='18'/%3e%3cline x1='6' y1='6' x2='18' y2='18'/%3e%3c/svg%3e") !important;
-        background-size: contain !important; background-repeat: no-repeat !important; background-position: center !important;
-        background-color: transparent !important; border-radius: 0 !important;
+        background-size: contain !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        background-color: transparent !important;
+        border-radius: 0 !important;
       }
-      .task-name-text { font-weight: normal; text-transform: uppercase; }
-      .task-row, .task-name-cell { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+      .task-name-text {
+        font-weight: normal;
+        text-transform: uppercase;
+      }
+
+      .task-row, .task-name-cell {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
     }
+
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 p-4 md:p-8">
+<div class="container max-w-6xl mx-auto bg-white p-6 md:p-8 rounded-xl shadow-2xl">
 
-<div id="app" v-cloak>
-  <div class="container max-w-6xl mx-auto bg-white p-6 md:p-8 rounded-xl shadow-2xl">
-
-    <div class="print-header hidden print:block text-center mb-4">
-      <h1 class="text-2xl font-bold text-black">Tarefas da Semana</h1>
-      <p class="text-sm text-slate-600">Marque um traço diagonal nas tarefas feitas ou vencidas</p>
-    </div>
-
-    <header class="mb-8 text-center no-print">
-      <h1 class="text-3xl md:text-4xl font-bold text-sky-600 main-title">Tarefas da Semana</h1>
-      <p class="text-md text-slate-500 mt-2">Marque um traço diagonal nas tarefas feitas ou vencidas</p>
-    </header>
-
-    <section class="add-task-section mb-8 p-6 bg-slate-50 rounded-lg shadow no-print">
-      <div class="flex flex-col sm:flex-row gap-4 items-end">
-        <div class="flex-grow">
-          <label for="task-name-input" class="block text-sm font-medium text-slate-600 mb-1">Nova Tarefa:</label>
-          <input type="text" id="task-name-input" placeholder="Ex: Lavar a louça"
-                 v-model="newTaskName"
-                 @keyup.enter="addTask"
-                 class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow">
-        </div>
-        <div class="flex-shrink-0">
-          <label for="calendar-start-date" class="block text-sm font-medium text-slate-600 mb-1">Dia Inicial:</label>
-          <input type="date" id="calendar-start-date" v-model="calendarStartDate" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500">
-        </div>
-        <button @click="addTask" class="action-button bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md w-full sm:w-auto">
-          Adicionar
-        </button>
-      </div>
-    </section>
-
-    <section class="task-list-section">
-      <h2 class="text-2xl font-semibold mb-4 text-slate-700 sr-only">Tarefas</h2>
-      <div v-if="tasks.length > 0" class="task-table-container bg-white rounded-lg shadow">
-        <table class="task-table">
-          <thead>
-          <tr>
-            <th class="no-print" style="width: 30px; padding-left: 0.3rem; padding-right: 0.3rem;"></th>
-            <th class="task-name-header">Tarefa</th>
-            <th class="task-color-header no-print">Cor</th>
-            <th v-for="day in calendarDates" :key="day.fullDateString" class="day-header">
-              {{ day.dayName }}<br><span class="text-xs font-normal">{{ day.date }}/{{ day.month }}</span>
-            </th>
-            <th class="no-print" style="width: 90px; padding-left: 0.3rem; padding-right: 0.3rem;"></th>
-          </tr>
-          </thead>
-          <tbody @dragover.prevent>
-          <tr v-for="(task, index) in tasks"
-              :key="task.id"
-              :id="task.id"
-              class="task-row"
-              :class="{ 'dragging': draggedItem && draggedItem.id === task.id }"
-              :style="{ backgroundColor: getRowStripeColor(index) }"
-              draggable="true"
-              @dragstart="onDragStart(task)"
-              @dragend="onDragEnd"
-              @drop="onDrop(index)"
-          >
-            <td class="drag-handle-cell no-print">
-              <span class="drag-handle" title="Arraste para reordenar">☰</span>
-            </td>
-            <td class="task-name-cell" :style="{ backgroundColor: getNameCellColor(task) }">
-                <span v-if="!task.isEditing" @click="task.isEditing = true" class="task-name-text text-slate-700 font-medium break-words">
-                  {{ task.name }}
-                </span>
-              <input v-else
-                     type="text"
-                     v-model="task.name"
-                     class="task-name-edit-input"
-                     @blur="task.isEditing = false"
-                     @keyup.enter="task.isEditing = false"
-                     @keyup.escape="cancelEdit(task)"
-                     ref="editInput"
-                     next-tick="focusEditInput(task.id)"
-              >
-            </td>
-            <td class="item-color-cell no-print text-center">
-              <input type="color"
-                     class="item-color-picker"
-                     v-model="task.backgroundColor"
-                     title="Escolher ou remover cor"
-                     @click="handleColorPickerClick($event, task)">
-            </td>
-            <td v-for="day in calendarDates" :key="day.weekdayIndex" class="day-checkbox-cell text-center">
-              <div class="custom-checkbox"
-                   :class="{ 'checked': task.checkedDays[day.weekdayIndex] }"
-                   @click="toggleCheckbox(task, day.weekdayIndex)"
-                   @keydown.enter.space.prevent="toggleCheckbox(task, day.weekdayIndex)"
-                   tabindex="0">
-              </div>
-            </td>
-            <td class="actions-cell no-print">
-              <button @click="duplicateTask(task.id)" class="duplicate-task-button text-blue-500 hover:text-blue-700 p-1" title="Duplicar tarefa">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-              </button>
-              <button @click="deleteTask(task.id)" class="delete-task-button text-red-500 hover:text-red-700 p-1" :title="'Excluir tarefa ' + task.name">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-              </button>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-      </div>
-      <p v-else class="text-center text-slate-500 mt-6">Nenhuma tarefa adicionada ainda. Clique em "Adicionar" para começar.</p>
-    </section>
-
-    <footer class="mt-10 text-center no-print">
-      <div class="flex justify-center items-center gap-4 mb-4">
-        <label for="print-font-size" class="text-sm font-medium text-slate-600">Fonte (Impressão):</label>
-        <input type="number" id="print-font-size" v-model.number="printFontSize" min="6" max="16" class="w-20 p-2 border border-slate-300 rounded-lg text-center">
-      </div>
-      <div class="flex justify-center items-center gap-2 flex-wrap">
-        <button @click="triggerImport" class="action-button bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md">Importar JSON</button>
-        <button @click="exportTasks" class="action-button bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md">Exportar JSON</button>
-        <button v-if="isShareApiAvailable" @click="shareTasks" class="action-button bg-purple-500 hover:bg-purple-600 text-white font-semibold p-3 rounded-lg shadow-md" title="Compartilhar">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share-2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
-        </button>
-        <button @click="printList" class="action-button bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md">Imprimir Lista</button>
-      </div>
-      <input type="file" ref="importFileInput" class="hidden" accept="application/json" @change="importTasks">
-    </footer>
+  <div class="print-header hidden print:block text-center mb-4">
+    <h1 class="text-2xl font-bold text-black">Tarefas da Semana</h1>
+    <p class="text-sm text-slate-600">Marque um traço diagonal nas tarefas feitas ou vencidas</p>
   </div>
+
+  <header class="mb-8 text-center no-print">
+    <h1 class="text-3xl md:text-4xl font-bold text-sky-600 main-title">Tarefas da Semana</h1>
+    <p class="text-md text-slate-500 mt-2">Marque um traço diagonal nas tarefas feitas ou vencidas</p>
+  </header>
+
+  <section class="add-task-section mb-8 p-6 bg-slate-50 rounded-lg shadow no-print">
+    <div class="flex flex-col sm:flex-row gap-4 items-end">
+      <div class="flex-grow">
+        <label for="task-name-input" class="block text-sm font-medium text-slate-600 mb-1">Nova Tarefa:</label>
+        <input type="text" id="task-name-input" placeholder="Ex: Lavar a louça"
+               class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow">
+      </div>
+      <div class="flex-shrink-0">
+        <label for="calendar-start-date" class="block text-sm font-medium text-slate-600 mb-1">Dia Inicial:</label>
+        <input type="date" id="calendar-start-date" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500">
+      </div>
+      <button id="add-task-button"
+              class="action-button bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md w-full sm:w-auto">
+        Adicionar
+      </button>
+    </div>
+  </section>
+
+  <section class="task-list-section">
+    <h2 class="text-2xl font-semibold mb-4 text-slate-700 sr-only">Tarefas</h2>
+    <div id="task-table-container" class="task-table-container bg-white rounded-lg shadow">
+      <table class="task-table">
+        <thead id="task-table-head">
+        <!-- Header generated by JS -->
+        </thead>
+        <tbody id="task-table-body">
+        <!-- Tasks generated by JS -->
+        </tbody>
+      </table>
+    </div>
+    <p id="no-tasks-message" class="text-center text-slate-500 mt-6">Nenhuma tarefa adicionada ainda. Clique em "Adicionar" ou recarregue a página para ver exemplos.</p>
+  </section>
+
+  <footer class="mt-10 text-center no-print">
+    <div class="flex justify-center items-center gap-4 mb-4">
+      <label for="print-font-size" class="text-sm font-medium text-slate-600">Fonte (Impressão):</label>
+      <input type="number" id="print-font-size" value="9" min="6" max="16" class="w-20 p-2 border border-slate-300 rounded-lg text-center">
+    </div>
+    <div class="flex justify-center items-center gap-2 flex-wrap">
+      <button id="import-button" class="action-button bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md">Importar JSON</button>
+      <button id="export-button" class="action-button bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md">Exportar JSON</button>
+      <button id="share-button" class="action-button bg-purple-500 hover:bg-purple-600 text-white font-semibold p-3 rounded-lg shadow-md hidden" title="Compartilhar">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share-2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+      </button>
+      <button id="print-button" class="action-button bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md">Imprimir Lista</button>
+    </div>
+    <input type="file" id="import-file-input" class="hidden" accept="application/json">
+  </footer>
 </div>
 
 <script>
-  const { createApp, ref, computed, onMounted, watch, nextTick } = Vue
+  // =================================================================================
+  // DOM ELEMENT SELECTORS & GLOBAL CONSTANTS
+  // =================================================================================
 
-  createApp({
-    setup() {
-      // =================================================================================
-      // STATE (Reactive Data)
-      // =================================================================================
-      const tasks = ref([]);
-      const newTaskName = ref('');
-      const calendarStartDate = ref('');
-      const printFontSize = ref(9);
-      const draggedItem = ref(null);
-      const importFileInput = ref(null); // Ref for the file input element
+  const taskNameInput = document.getElementById('task-name-input');
+  const addTaskButton = document.getElementById('add-task-button');
+  const taskTableHead = document.getElementById('task-table-head');
+  const taskTableBody = document.getElementById('task-table-body');
+  const printButton = document.getElementById('print-button');
+  const noTasksMessage = document.getElementById('no-tasks-message');
+  const printFontSizeInput = document.getElementById('print-font-size');
+  const importButton = document.getElementById('import-button');
+  const exportButton = document.getElementById('export-button');
+  const shareButton = document.getElementById('share-button');
+  const importFileInput = document.getElementById('import-file-input');
+  const calendarStartDateInput = document.getElementById('calendar-start-date');
 
-      const dayNamesShort = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-      const monthNamesShort = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+  const dayNamesShort = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const monthNamesShort = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
-      // =================================================================================
-      // COMPUTED PROPERTIES (Derived State)
-      // =================================================================================
+  // =================================================================================
+  // UTILITY FUNCTIONS
+  // =================================================================================
 
-      /**
-       * @returns {boolean} - True if the Web Share API is available.
-       */
-      const isShareApiAvailable = computed(() => !!navigator.share);
+  /**
+   * Lightens a HEX color by a given percentage.
+   * @param {string} hex - The hex color string (e.g., '#RRGGBB').
+   * @param {number} percent - The percentage to lighten the color (0-100).
+   * @returns {string} The new, lightened hex color string. Returns a default if input is invalid.
+   */
+  function lightenHexColor(hex, percent) {
+    if (!hex || typeof hex !== 'string') return 'var(--default-white-color)';
+    hex = hex.replace(/^#/, '');
+    if (hex.length === 3) hex = hex.split('').map(char => char + char).join('');
+    if (hex.length !== 6) return 'var(--default-white-color)';
 
-      /**
-       * @returns {Array<Object>} - An array of 7 day-information objects for the calendar header.
-       */
-      const calendarDates = computed(() => {
-        const days = [];
-        if (!calendarStartDate.value) return [];
+    let r = parseInt(hex.substring(0, 2), 16);
+    let g = parseInt(hex.substring(2, 4), 16);
+    let b = parseInt(hex.substring(4, 6), 16);
 
-        const [year, month, day] = calendarStartDate.value.split('-').map(Number);
-        const baseDate = new Date(year, month - 1, day);
+    r = Math.min(255, r + Math.floor((255 - r) * (percent / 100)));
+    g = Math.min(255, g + Math.floor((255 - g) * (percent / 100)));
+    b = Math.min(255, b + Math.floor((255 - b) * (percent / 100)));
 
-        for (let i = 0; i < 7; i++) {
-          const currentDate = new Date(baseDate);
-          currentDate.setDate(baseDate.getDate() + i);
-          days.push({
-            dayName: dayNamesShort[currentDate.getDay()],
-            date: currentDate.getDate(),
-            month: monthNamesShort[currentDate.getMonth()],
-            fullDateString: `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`,
-            weekdayIndex: currentDate.getDay()
-          });
-        }
-        return days;
-      });
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  }
 
-      // =================================================================================
-      // METHODS (Business Logic)
-      // =================================================================================
+  /**
+   * Generates an array of the next seven days starting from a given date.
+   * Operates in the browser's local timezone to avoid off-by-one errors.
+   * @param {string} [startDateString] - The start date in 'YYYY-MM-DD' format. If not provided, defaults to tomorrow.
+   * @returns {Array<Object>} An array of 7 day-information objects.
+   */
+  function getNextSevenDays(startDateString) {
+    const days = [];
+    let baseDate;
 
-      // --- Task Management ---
-      const addTask = () => {
-        const name = newTaskName.value.trim();
-        if (!name) return;
-        tasks.value.push({
-          id: `task-${Date.now()}`,
-          name: name,
-          checkedDays: Array(7).fill(false),
-          backgroundColor: '#ffffff',
-          isEditing: false, // For in-place editing UI
-          originalName: name // To restore on escape
-        });
-        newTaskName.value = '';
-      };
-
-      const deleteTask = (taskId) => {
-        tasks.value = tasks.value.filter(t => t.id !== taskId);
-      };
-
-      const duplicateTask = (taskId) => {
-        const taskIndex = tasks.value.findIndex(t => t.id === taskId);
-        if (taskIndex > -1) {
-          const originalTask = tasks.value[taskIndex];
-          const newTask = {
-            ...originalTask,
-            id: `task-${Date.now()}`
-          };
-          tasks.value.splice(taskIndex + 1, 0, newTask);
-        }
-      };
-
-      const toggleCheckbox = (task, dayIndex) => {
-        task.checkedDays[dayIndex] = !task.checkedDays[dayIndex];
-      };
-
-      const cancelEdit = (task) => {
-        task.name = task.originalName;
-        task.isEditing = false;
-      };
-
-      // --- UI & Styling ---
-      const lightenHexColor = (hex, percent) => {
-        if (!hex || typeof hex !== 'string' || hex.toLowerCase() === '#ffffff') return '';
-        hex = hex.replace(/^#/, '');
-        if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
-        let r = parseInt(hex.substring(0, 2), 16);
-        let g = parseInt(hex.substring(2, 4), 16);
-        let b = parseInt(hex.substring(4, 6), 16);
-        r = Math.min(255, r + Math.floor((255 - r) * (percent / 100)));
-        g = Math.min(255, g + Math.floor((255 - g) * (percent / 100)));
-        b = Math.min(255, b + Math.floor((255 - b) * (percent / 100)));
-        return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-      };
-
-      const getRowStripeColor = (index) => (index % 2 !== 0) ? 'var(--default-stripe-color)' : 'var(--default-white-color)';
-
-      const getNameCellColor = (task) => lightenHexColor(task.backgroundColor, 60);
-
-      const handleColorPickerClick = (event, task) => {
-        if (task.backgroundColor && task.backgroundColor.toLowerCase() !== '#ffffff') {
-          event.preventDefault();
-          task.backgroundColor = '#ffffff';
-        }
-      };
-
-      // --- Drag and Drop ---
-      const onDragStart = (task) => {
-        draggedItem.value = task;
-      };
-
-      const onDragEnd = () => {
-        draggedItem.value = null;
-      };
-
-      const onDrop = (dropIndex) => {
-        if (!draggedItem.value) return;
-        const dragIndex = tasks.value.findIndex(t => t.id === draggedItem.value.id);
-        if (dragIndex === -1) return;
-        // Remove and re-insert the item at the new position
-        const item = tasks.value.splice(dragIndex, 1)[0];
-        tasks.value.splice(dropIndex, 0, item);
-      };
-
-      // --- Import/Export/Print/Share ---
-      const triggerImport = () => importFileInput.value.click();
-
-      const importTasks = (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const data = JSON.parse(e.target.result);
-            if (data && Array.isArray(data.tasks)) {
-              tasks.value = data.tasks; // This will trigger the watcher to save
-              if (data.settings?.printFontSize) {
-                printFontSize.value = data.settings.printFontSize;
-              }
-              alert('Dados importados com sucesso!');
-            } else { throw new Error('Formato do arquivo JSON é inválido.'); }
-          } catch (error) { alert('Erro ao importar o arquivo: ' + error.message); }
-        };
-        reader.readAsText(file);
-        event.target.value = '';
-      };
-
-      const exportTasks = () => {
-        const dataToExport = { tasks: tasks.value, settings: { printFontSize: printFontSize.value } };
-        const dataBlob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'lista_de_tarefas.json';
-        link.click();
-        URL.revokeObjectURL(url);
-      };
-
-      const shareTasks = async () => {
-        const data = { tasks: tasks.value, settings: { printFontSize: printFontSize.value } };
-        const file = new File([JSON.stringify(data)], 'lista_de_tarefas.json', { type: 'application/json' });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ title: 'Tarefas da Semana', files: [file] }).catch(console.error);
-        } else { alert('Seu navegador não suporta o compartilhamento de arquivos.'); }
-      };
-
-      const printList = () => {
-        const size = printFontSize.value;
-        const checkboxSize = parseFloat(size) * 2.2;
-        const printStyles = `
-              @media print {
-                  :root { --print-font-size: ${size}pt !important; --print-checkbox-size: ${checkboxSize}px !important; }
-                  .task-table, .task-table th, .task-table td, .task-name-text { font-size: var(--print-font-size); }
-                  .custom-checkbox { width: var(--print-checkbox-size); height: var(--print-checkbox-size); }
-              }`;
-        const styleSheet = document.createElement("style");
-        styleSheet.id = 'dynamic-print-style';
-        styleSheet.innerText = printStyles;
-        document.head.appendChild(styleSheet);
-        window.print();
-        styleSheet.remove();
-      };
-
-      // =================================================================================
-      // LIFECYCLE & WATCHERS
-      // =================================================================================
-      onMounted(() => {
-        // Load data from localStorage, maintaining compatibility
-        const savedTasks = localStorage.getItem('tasks');
-        if (savedTasks) {
-          tasks.value = JSON.parse(savedTasks);
-        } else {
-          // Add default tasks if none exist
-          addTask({ value: 'Lavar a Louça' });
-          addTask({ value: 'Dobrar Roupas' });
-        }
-        printFontSize.value = parseInt(localStorage.getItem('printFontSize') || '9', 10);
-
-        // Set default start date to tomorrow (local timezone)
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        calendarStartDate.value = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
-      });
-
-      // Watch for any changes in the tasks array and save to localStorage
-      watch(tasks, (newTasks) => {
-        // Before saving, ensure `isEditing` and `originalName` are not persisted
-        const tasksToSave = newTasks.map(t => {
-          const { isEditing, originalName, ...rest } = t;
-          return rest;
-        });
-        localStorage.setItem('tasks', JSON.stringify(tasksToSave));
-      }, { deep: true }); // 'deep' is crucial for watching nested properties
-
-      // Watch for changes in print font size and save
-      watch(printFontSize, (newSize) => {
-        localStorage.setItem('printFontSize', newSize);
-      });
-
-      // Watch for a task entering edit mode to set originalName
-      watch(() => tasks.value.find(t => t.isEditing), (editingTask) => {
-        if (editingTask) {
-          editingTask.originalName = editingTask.name;
-          nextTick(() => {
-            // Vue needs to render the input first, then we can focus it.
-            const inputEl = document.querySelector('input.task-name-edit-input');
-            inputEl?.focus();
-          });
-        }
-      });
-
-      // Expose state and methods to the template
-      return {
-        tasks,
-        newTaskName,
-        calendarStartDate,
-        printFontSize,
-        isShareApiAvailable,
-        calendarDates,
-        draggedItem,
-        importFileInput,
-        addTask,
-        deleteTask,
-        duplicateTask,
-        toggleCheckbox,
-        cancelEdit,
-        getRowStripeColor,
-        getNameCellColor,
-        handleColorPickerClick,
-        onDragStart,
-        onDragEnd,
-        onDrop,
-        triggerImport,
-        importTasks,
-        exportTasks,
-        shareTasks,
-        printList
-      };
+    if (startDateString) {
+      // Parse the date string correctly in local time by splitting it.
+      // new Date('YYYY-MM-DD') can be interpreted as UTC midnight, causing timezone issues.
+      const [year, month, day] = startDateString.split('-').map(Number);
+      baseDate = new Date(year, month - 1, day);
+    } else {
+      // Default to tomorrow in local time
+      baseDate = new Date();
+      baseDate.setDate(baseDate.getDate() + 1);
     }
-  }).mount('#app')
+
+    for (let i = 0; i < 7; i++) {
+      const currentDate = new Date(baseDate);
+      currentDate.setDate(baseDate.getDate() + i);
+      days.push({
+        dayName: dayNamesShort[currentDate.getDay()],
+        date: currentDate.getDate(),
+        month: monthNamesShort[currentDate.getMonth()],
+        fullDateString: `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`,
+        weekdayIndex: currentDate.getDay()
+      });
+    }
+    return days;
+  }
+
+  // =================================================================================
+  // CORE APPLICATION LOGIC & RENDERING
+  // =================================================================================
+
+  /**
+   * Main function to render the entire task calendar, including header and all task rows.
+   * @param {string} startDate - The start date for the calendar week.
+   */
+  function renderCalendar(startDate) {
+    const calendarDates = getNextSevenDays(startDate);
+    const tasks = getTasksFromStorage();
+
+    // Clear previous state
+    taskTableHead.innerHTML = '';
+    taskTableBody.innerHTML = '';
+
+    // Render header using a template literal for simplicity and readability
+    const headerHTML = `
+      <tr>
+        <th class="no-print" style="width: 30px; padding-left: 0.3rem; padding-right: 0.3rem;"></th>
+        <th class="task-name-header">Tarefa</th>
+        <th class="task-color-header no-print">Cor</th>
+        ${calendarDates.map(dayInfo => `
+          <th class="day-header">
+            ${dayInfo.dayName}<br><span class="text-xs font-normal">${dayInfo.date}/${dayInfo.month}</span>
+          </th>
+        `).join('')}
+        <th class="no-print" style="width: 90px; padding-left: 0.3rem; padding-right: 0.3rem;"></th>
+      </tr>
+    `;
+    taskTableHead.innerHTML = headerHTML;
+
+    // Render each task row
+    tasks.forEach(task => {
+      const taskRowElement = createTaskRow(task, calendarDates);
+      if (taskRowElement) {
+        taskTableBody.appendChild(taskRowElement);
+      }
+    });
+
+    // Apply styles and update UI messages
+    applyRowBackgrounds();
+    updateNoTasksMessage();
+  }
+
+  /**
+   * Creates a single task row element (TR) with all its cells and functionality.
+   * @param {Object} task - The task object from storage.
+   * @param {Array<Object>} calendarDates - The array of dates for the current week.
+   * @returns {HTMLElement|null} The fully constructed TR element or null if the task is invalid.
+   */
+  function createTaskRow(task, calendarDates) {
+    if (!task.name || !task.name.trim()) return null;
+
+    const taskRow = document.createElement('tr');
+    taskRow.className = 'task-row';
+    taskRow.draggable = true;
+    taskRow.id = task.id;
+
+    // --- Drag Handle Cell ---
+    const dragHandleCell = document.createElement('td');
+    dragHandleCell.className = 'drag-handle-cell no-print';
+    dragHandleCell.innerHTML = `<span class="drag-handle" title="Arraste para reordenar">☰</span>`;
+    taskRow.appendChild(dragHandleCell);
+
+    // --- Task Name Cell (with in-place editing) ---
+    const nameCell = document.createElement('td');
+    nameCell.className = 'task-name-cell';
+    const taskNameText = document.createElement('span');
+    taskNameText.className = 'task-name-text text-slate-700 font-medium break-words';
+    taskNameText.textContent = task.name;
+    const taskNameInput = document.createElement('input');
+    taskNameInput.type = 'text';
+    taskNameInput.className = 'task-name-edit-input hidden';
+    taskNameInput.value = task.name;
+    nameCell.append(taskNameText, taskNameInput);
+
+    taskNameText.addEventListener('click', () => {
+      taskNameText.classList.add('hidden');
+      taskNameInput.classList.remove('hidden');
+      taskNameInput.focus();
+      taskNameInput.select();
+    });
+    const saveNameEdit = () => {
+      const newName = taskNameInput.value.trim();
+      if (newName) {
+        updateTaskProperty(task.id, 'name', newName);
+        taskNameText.textContent = newName;
+      }
+      taskNameInput.classList.add('hidden');
+      taskNameText.classList.remove('hidden');
+    };
+    taskNameInput.addEventListener('blur', saveNameEdit);
+    taskNameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); taskNameInput.blur(); }
+      if (e.key === 'Escape') { taskNameInput.value = task.name; taskNameInput.blur(); }
+    });
+    taskRow.appendChild(nameCell);
+
+    // --- Color Picker Cell ---
+    const itemColorCell = document.createElement('td');
+    itemColorCell.className = 'item-color-cell no-print text-center';
+    const itemColorInput = document.createElement('input');
+    itemColorInput.type = 'color';
+    itemColorInput.className = 'item-color-picker';
+    itemColorInput.value = task.backgroundColor || '#ffffff';
+    itemColorInput.title = 'Escolher ou remover cor';
+    itemColorInput.addEventListener('click', (e) => {
+      if (itemColorInput.value.toLowerCase() !== '#ffffff') {
+        e.preventDefault();
+        itemColorInput.value = '#ffffff';
+        itemColorInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+    itemColorInput.addEventListener('input', (e) => {
+      updateTaskProperty(task.id, 'backgroundColor', e.target.value);
+      applyRowBackgrounds();
+    });
+    itemColorCell.appendChild(itemColorInput);
+    taskRow.appendChild(itemColorCell);
+
+    // --- Daily Checkbox Cells ---
+    calendarDates.forEach(dayInfo => {
+      const dayCell = document.createElement('td');
+      dayCell.className = 'day-checkbox-cell text-center';
+      const checkbox = document.createElement('div');
+      checkbox.className = 'checkbox-placeholder custom-checkbox';
+      if (task.checkedDays && task.checkedDays[dayInfo.weekdayIndex]) {
+        checkbox.classList.add('checked');
+        checkbox.setAttribute('aria-checked', 'true');
+      } else {
+        checkbox.setAttribute('aria-checked', 'false');
+      }
+      checkbox.tabIndex = 0;
+      checkbox.onclick = function() {
+        const isChecked = this.classList.toggle('checked');
+        this.setAttribute('aria-checked', isChecked);
+        updateTaskProperty(task.id, 'checkedDays', (currentTask) => {
+          currentTask.checkedDays[dayInfo.weekdayIndex] = isChecked;
+        });
+      };
+      checkbox.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.target.click(); } };
+      dayCell.appendChild(checkbox);
+      taskRow.appendChild(dayCell);
+    });
+
+    // --- Actions Cell (Duplicate, Delete) ---
+    const actionsCell = document.createElement('td');
+    actionsCell.className = 'actions-cell no-print';
+    const duplicateButton = document.createElement('button');
+    duplicateButton.className = 'duplicate-task-button text-blue-500 hover:text-blue-700 p-1';
+    duplicateButton.title = 'Duplicar tarefa';
+    duplicateButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
+    duplicateButton.onclick = () => {
+      const allTasks = getTasksFromStorage();
+      const taskIndex = allTasks.findIndex(t => t.id === task.id);
+      if (taskIndex > -1) {
+        const newTask = { ...allTasks[taskIndex], id: `task-${Date.now()}` };
+        allTasks.splice(taskIndex + 1, 0, newTask);
+        localStorage.setItem('tasks', JSON.stringify(allTasks));
+        renderCalendar(calendarStartDateInput.value);
+      }
+    };
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'delete-task-button text-red-500 hover:text-red-700 p-1';
+    deleteButton.title = `Excluir tarefa ${task.name}`;
+    deleteButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>`;
+    deleteButton.onclick = () => {
+      const remainingTasks = getTasksFromStorage().filter(t => t.id !== task.id);
+      localStorage.setItem('tasks', JSON.stringify(remainingTasks));
+      renderCalendar(calendarStartDateInput.value);
+    };
+    actionsCell.append(duplicateButton, deleteButton);
+    taskRow.appendChild(actionsCell);
+
+    return taskRow;
+  }
+
+  /**
+   * Toggles the visibility of the "no tasks" message based on whether tasks exist.
+   */
+  function updateNoTasksMessage() {
+    const hasTasks = getTasksFromStorage().length > 0;
+    noTasksMessage.classList.toggle('hidden', hasTasks);
+    document.getElementById('task-table-container').classList.toggle('hidden', !hasTasks);
+  }
+
+  /**
+   * Applies background colors to rows (zebra-striping) and specific task name cells.
+   */
+  function applyRowBackgrounds() {
+    const taskRows = taskTableBody.querySelectorAll('.task-row');
+    const tasksData = getTasksFromStorage();
+
+    taskRows.forEach((row, index) => {
+      const taskData = tasksData.find(t => t.id === row.id);
+      // Step 1: Apply zebra striping to the entire row.
+      row.style.backgroundColor = (index % 2 !== 0) ? 'var(--default-stripe-color)' : 'var(--default-white-color)';
+      // Step 2: If a custom color exists, apply it ONLY to the name cell, overriding the row color.
+      const nameCell = row.querySelector('.task-name-cell');
+      if (nameCell) {
+        nameCell.style.backgroundColor = (taskData && taskData.backgroundColor && taskData.backgroundColor.toLowerCase() !== '#ffffff')
+          ? lightenHexColor(taskData.backgroundColor, 60)
+          : ''; // Reset to inherit from row if no color.
+      }
+    });
+  }
+
+  // =================================================================================
+  // DATA PERSISTENCE (LOCALSTORAGE)
+  // =================================================================================
+
+  /**
+   * Retrieves all tasks from localStorage.
+   * @returns {Array<Object>} An array of task objects or an empty array.
+   */
+  function getTasksFromStorage() {
+    return JSON.parse(localStorage.getItem('tasks')) || [];
+  }
+
+  /**
+   * Updates a specific property of a task in localStorage.
+   * @param {string} taskId - The ID of the task to update.
+   * @param {string} key - The property key to update (e.g., 'name', 'checkedDays').
+   * @param {*} valueOrUpdater - The new value or a function that receives the task and modifies it.
+   */
+  function updateTaskProperty(taskId, key, valueOrUpdater) {
+    const tasks = getTasksFromStorage();
+    const taskIndex = tasks.findIndex(t => t.id === taskId);
+    if (taskIndex > -1) {
+      if (typeof valueOrUpdater === 'function') {
+        valueOrUpdater(tasks[taskIndex]);
+      } else {
+        tasks[taskIndex][key] = valueOrUpdater;
+      }
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+  }
+
+  /**
+   * Loads tasks from storage or populates with example tasks if storage is empty.
+   */
+  function loadInitialTasks() {
+    let tasks = getTasksFromStorage();
+    if (tasks.length === 0) {
+      tasks = [
+        { id: `task-example-1`, name: "Lavar a Louça", checkedDays: Array(7).fill(false), backgroundColor: '#ffffff' },
+        { id: `task-example-2`, name: "Dobrar Roupas", checkedDays: Array(7).fill(false), backgroundColor: '#ffffff' },
+        { id: `task-example-3`, name: "Limpar o Banheiro", checkedDays: Array(7).fill(false), backgroundColor: '#ffffff' }
+      ];
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+    renderCalendar(calendarStartDateInput.value);
+  }
+
+  // =================================================================================
+  // EVENT LISTENERS
+  // =================================================================================
+
+  // --- Drag and Drop for Task Reordering ---
+  let draggedItem = null;
+  taskTableBody.addEventListener('dragstart', (e) => {
+    if (e.target.classList.contains('task-row')) {
+      draggedItem = e.target;
+      setTimeout(() => e.target.classList.add('dragging'), 0);
+    }
+  });
+
+  taskTableBody.addEventListener('dragend', () => {
+    if (draggedItem) {
+      draggedItem.classList.remove('dragging');
+      const orderedIds = Array.from(taskTableBody.querySelectorAll('.task-row')).map(row => row.id);
+      const allTasks = getTasksFromStorage();
+      const reorderedTasks = orderedIds.map(id => allTasks.find(t => t.id === id)).filter(Boolean);
+      localStorage.setItem('tasks', JSON.stringify(reorderedTasks));
+      draggedItem = null;
+      applyRowBackgrounds(); // Re-apply zebra striping after reordering.
+    }
+  });
+
+  taskTableBody.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const afterElement = getDragAfterElement(taskTableBody, e.clientY);
+    if (draggedItem) {
+      if (afterElement == null) {
+        taskTableBody.appendChild(draggedItem);
+      } else {
+        taskTableBody.insertBefore(draggedItem, afterElement);
+      }
+    }
+  });
+
+  function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.task-row:not(.dragging)')];
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      }
+      return closest;
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+
+  // --- Main Actions ---
+  addTaskButton.addEventListener('click', () => {
+    const taskNameValue = taskNameInput.value.trim();
+    if (!taskNameValue) {
+      taskNameInput.classList.add('border-red-500');
+      taskNameInput.placeholder = "Nome da tarefa não pode ser vazio!";
+      setTimeout(() => {
+        taskNameInput.classList.remove('border-red-500');
+        taskNameInput.placeholder = "Ex: Lavar a louça";
+      }, 2000);
+      taskNameInput.focus();
+      return;
+    }
+    const newTask = {
+      id: `task-${Date.now()}`,
+      name: taskNameValue,
+      checkedDays: Array(7).fill(false),
+      backgroundColor: '#ffffff'
+    };
+    const currentTasks = getTasksFromStorage();
+    localStorage.setItem('tasks', JSON.stringify([...currentTasks, newTask]));
+    renderCalendar(calendarStartDateInput.value);
+    taskNameInput.value = '';
+    taskNameInput.focus();
+  });
+
+  taskNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTaskButton.click() });
+
+  calendarStartDateInput.addEventListener('input', (e) => renderCalendar(e.target.value));
+
+  // --- Import/Export/Share/Print ---
+  exportButton.addEventListener('click', () => {
+    const dataToExport = {
+      tasks: getTasksFromStorage(),
+      settings: { printFontSize: printFontSizeInput.value }
+    };
+    const dataBlob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'lista_de_tarefas.json';
+    link.click();
+    URL.revokeObjectURL(url);
+  });
+
+  importButton.addEventListener('click', () => importFileInput.click());
+
+  importFileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        if (data && Array.isArray(data.tasks)) {
+          localStorage.setItem('tasks', JSON.stringify(data.tasks));
+          if (data.settings?.printFontSize) {
+            printFontSizeInput.value = data.settings.printFontSize;
+            localStorage.setItem('printFontSize', data.settings.printFontSize);
+          }
+          renderCalendar(calendarStartDateInput.value);
+          alert('Dados importados com sucesso!');
+        } else {
+          throw new Error('Formato do arquivo JSON é inválido.');
+        }
+      } catch (error) {
+        alert('Erro ao importar o arquivo: ' + error.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // Reset for re-upload
+  });
+
+  shareButton.addEventListener('click', async () => {
+    const data = { tasks: getTasksFromStorage(), settings: { printFontSize: printFontSizeInput.value } };
+    const file = new File([JSON.stringify(data)], 'lista_de_tarefas.json', { type: 'application/json' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ title: 'Tarefas da Semana', files: [file] }).catch(console.error);
+    } else {
+      alert('Seu navegador não suporta o compartilhamento de arquivos.');
+    }
+  });
+
+  printButton.addEventListener('click', () => {
+    const fontSize = printFontSizeInput.value;
+    localStorage.setItem('printFontSize', fontSize);
+    const checkboxSize = parseFloat(fontSize) * 2.2;
+    const printStyles = `
+      @media print {
+        :root {
+          --print-font-size: ${fontSize}pt !important;
+          --print-checkbox-size: ${checkboxSize}px !important;
+        }
+        .task-table, .task-table th, .task-table td, .task-name-text { font-size: var(--print-font-size); }
+        .custom-checkbox { width: var(--print-checkbox-size); height: var(--print-checkbox-size); }
+      }`;
+    const styleSheet = document.createElement("style");
+    styleSheet.id = 'dynamic-print-style';
+    styleSheet.innerText = printStyles;
+    document.head.appendChild(styleSheet);
+    window.print();
+    styleSheet.remove(); // Clean up after print dialog
+  });
+
+  // =================================================================================
+  // INITIALIZATION
+  // =================================================================================
+
+  /**
+   * Sets up the initial state of the application on page load.
+   */
+  function initializeApp() {
+    // Set default start date to tomorrow, using local timezone.
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const year = tomorrow.getFullYear();
+    const month = (tomorrow.getMonth() + 1).toString().padStart(2, '0'); // JS months are 0-11
+    const day = tomorrow.getDate().toString().padStart(2, '0');
+    calendarStartDateInput.value = `${year}-${month}-${day}`;
+
+    // Load saved settings
+    printFontSizeInput.value = localStorage.getItem('printFontSize') || '9';
+    if (navigator.share) shareButton.classList.remove('hidden');
+
+    // Load tasks and render the calendar
+    loadInitialTasks();
+  }
+
+  initializeApp();
 </script>
 </body>
 </html>
