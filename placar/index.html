@@ -145,6 +145,7 @@
       padding: 5px 25px;
       border-radius: 20px;
       border: 2px solid rgba(255, 255, 255, 0.2);
+      cursor: pointer; /* Adicionado para indicar que é clicável */
     }
 
     .timer-container.timer-paused {
@@ -230,7 +231,7 @@
 
 <div id="rotation-wrapper">
   <div id="app">
-    <div class="timer-container" :class="{ 'timer-paused': !timerIsRunning && timerTotalSeconds > 0 }">
+    <div class="timer-container" :class="{ 'timer-paused': !timerIsRunning && timerTotalSeconds > 0 }" @click.stop="swapTeamNames">
       <span class="timer-display">{{ formattedTime }}</span>
     </div>
 
