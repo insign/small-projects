@@ -1,1 +1,406 @@
-started
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
+        <title>Placar Interativo</title>
+        <!-- Importa o Vue.js via CDN -->
+        <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <!-- Fonte Roboto Mono -->
+        <link
+            href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@700&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            /* Reseta estilos básicos e define a fonte */
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden; /* Evita barras de rolagem */
+                font-family: "Roboto Mono", monospace;
+                background-color: #111;
+            }
+
+            /* Força a orientação paisagem apenas em dispositivos de toque (celulares/tablets).
+          (hover: none) e (pointer: coarse) são usados para detectar dispositivos de toque.
+        */
+            @media (orientation: portrait) and (hover: none) and (pointer: coarse) {
+                html {
+                    /* Gira a tela inteira em dispositivos no modo retrato */
+                    transform: rotate(-90deg);
+                    transform-origin: left top;
+                    width: 100vh;
+                    height: 100vw;
+                    overflow-x: hidden;
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                }
+            }
+
+            /* Container principal da aplicação */
+            #app {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                position: relative;
+            }
+
+            /* Container do placar */
+            .scoreboard {
+                display: flex;
+                width: 100%;
+                height: 100%;
+            }
+
+            /* Estilo de cada time */
+            .team {
+                flex: 1; /* Divide o espaço igualmente */
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                color: white;
+                position: relative;
+                user-select: none; /* Impede a seleção de texto */
+                transition: background-color 0.3s ease;
+                cursor: pointer; /* Indica que toda a área é clicável */
+            }
+
+            /* Cores de fundo para cada time */
+            .team-a {
+                background-color: #c0392b; /* Vermelho */
+            }
+
+            .team-b {
+                background-color: #2980b9; /* Azul */
+            }
+
+            /* Nome do time */
+            .team-name {
+                font-size: 5vh;
+                font-weight: bold;
+                text-transform: uppercase;
+                position: absolute;
+                top: 5%;
+            }
+
+            /* Estilo da pontuação */
+            .score {
+                font-size: 45vh; /* Tamanho da fonte relativo à altura da tela */
+                font-weight: bold;
+                line-height: 1;
+            }
+
+            /* Container do cronômetro */
+            .timer-container {
+                position: absolute;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10;
+                background-color: rgba(0, 0, 0, 0.4);
+                padding: 5px 25px;
+                border-radius: 20px;
+                border: 2px solid rgba(255, 255, 255, 0.2);
+            }
+
+            .timer-display {
+                font-size: 4vh;
+                color: white;
+                font-weight: bold;
+            }
+
+            /* Container para os botões de controle */
+            .controls {
+                position: absolute;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10;
+            }
+
+            /* Estilo do botão de reset */
+            .reset-button {
+                background-color: rgba(255, 255, 255, 0.2);
+                border: 2px solid rgba(255, 255, 255, 0.5);
+                color: white;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: background-color 0.2s;
+            }
+
+            .reset-button:hover {
+                background-color: rgba(255, 255, 255, 0.4);
+            }
+
+            .reset-button svg {
+                width: 28px;
+                height: 28px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app">
+            <!-- Cronômetro -->
+            <div class="timer-container">
+                <span class="timer-display">{{ formattedTime }}</span>
+            </div>
+
+            <div class="scoreboard">
+                <!-- Seção do Time A -->
+                <div
+                    class="team team-a"
+                    @touchstart="handleTouchStart"
+                    @touchend="handleTouchEnd('A', $event)"
+                >
+                    <div class="team-name">PORTA</div>
+                    <div class="score">{{ scoreA }}</div>
+                </div>
+
+                <!-- Seção do Time B -->
+                <div
+                    class="team team-b"
+                    @touchstart="handleTouchStart"
+                    @touchend="handleTouchEnd('B', $event)"
+                >
+                    <div class="team-name">Fundo</div>
+                    <div class="score">{{ scoreB }}</div>
+                </div>
+            </div>
+
+            <!-- Botões de Controle -->
+            <div class="controls">
+                <button
+                    @touchend.stop="resetGame"
+                    @click.stop="resetGame"
+                    class="reset-button"
+                    title="Zerar Placar e Pausar Cronômetro"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="white"
+                    >
+                        <path
+                            d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"
+                        />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <script>
+            const { createApp } = Vue;
+
+            createApp({
+                data() {
+                    return {
+                        scoreA: 0,
+                        scoreB: 0,
+                        touchStartX: 0,
+                        touchStartY: 0,
+                        swipeThreshold: 50,
+                        timerTotalSeconds: 0,
+                        timerIsRunning: false,
+                        timerId: null,
+                        wakeLock: null, // Adiciona a propriedade para o Wake Lock
+                    };
+                },
+                computed: {
+                    // Formata o tempo total em segundos para o formato MM:SS
+                    formattedTime() {
+                        const minutes = Math.floor(this.timerTotalSeconds / 60);
+                        const seconds = this.timerTotalSeconds % 60;
+                        return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+                    },
+                },
+                methods: {
+                    // Zera a pontuação e pausa o cronômetro
+                    resetGame(event) {
+                        event.preventDefault();
+                        this.scoreA = 0;
+                        this.scoreB = 0;
+                        this.pauseTimer();
+                    },
+                    startTimer() {
+                        if (this.timerIsRunning) return;
+                        this.timerIsRunning = true;
+                        this.requestWakeLock(); // Solicita o bloqueio de tela
+                        this.timerId = setInterval(() => {
+                            this.timerTotalSeconds++;
+                        }, 1000);
+                    },
+                    pauseTimer() {
+                        this.timerIsRunning = false;
+                        clearInterval(this.timerId);
+                        this.releaseWakeLock(); // Libera o bloqueio de tela
+                    },
+                    // Solicita o bloqueio de tela para evitar que ela se apague
+                    async requestWakeLock() {
+                        if ("wakeLock" in navigator) {
+                            try {
+                                this.wakeLock =
+                                    await navigator.wakeLock.request("screen");
+                                this.wakeLock.addEventListener(
+                                    "release",
+                                    () => {
+                                        console.log(
+                                            "Wake Lock foi liberado pelo sistema.",
+                                        );
+                                    },
+                                );
+                                console.log("Wake Lock está ativo.");
+                            } catch (err) {
+                                console.error(
+                                    `Não foi possível ativar o Wake Lock: ${err.name}, ${err.message}`,
+                                );
+                            }
+                        } else {
+                            console.log(
+                                "API Wake Lock não é suportada neste navegador.",
+                            );
+                        }
+                    },
+                    // Libera o bloqueio de tela
+                    async releaseWakeLock() {
+                        if (this.wakeLock !== null) {
+                            try {
+                                await this.wakeLock.release();
+                                this.wakeLock = null;
+                                console.log("Wake Lock foi liberado.");
+                            } catch (err) {
+                                console.error(
+                                    `Falha ao liberar o Wake Lock: ${err.name}, ${err.message}`,
+                                );
+                            }
+                        }
+                    },
+                    // Incrementa a pontuação do time especificado
+                    incrementScore(team) {
+                        const wasGameAtZero =
+                            this.scoreA === 0 && this.scoreB === 0;
+
+                        if (team === "A") {
+                            this.scoreA++;
+                        } else {
+                            this.scoreB++;
+                        }
+
+                        if (wasGameAtZero) {
+                            this.timerTotalSeconds = 0;
+                            this.startTimer();
+                        }
+                    },
+                    // Decrementa a pontuação, com um mínimo de 0
+                    decrementScore(team) {
+                        if (team === "A" && this.scoreA > 0) {
+                            this.scoreA--;
+                        } else if (team === "B" && this.scoreB > 0) {
+                            this.scoreB--;
+                        }
+                    },
+                    // Armazena a posição inicial do toque
+                    handleTouchStart(event) {
+                        if (event.target.closest(".controls")) {
+                            return;
+                        }
+                        this.touchStartX = event.changedTouches[0].clientX;
+                        this.touchStartY = event.changedTouches[0].clientY;
+                    },
+                    // Processa o final do toque para detectar swipe ou toque
+                    handleTouchEnd(team, event) {
+                        if (event.target.closest(".controls")) {
+                            return;
+                        }
+                        const touchEndX = event.changedTouches[0].clientX;
+                        const touchEndY = event.changedTouches[0].clientY;
+                        const isPortrait = window.matchMedia(
+                            "(orientation: portrait)",
+                        ).matches;
+
+                        let swipeDetected = false;
+
+                        const swipeDistanceX = Math.abs(
+                            this.touchStartX - touchEndX,
+                        );
+                        const swipeDistanceY = Math.abs(
+                            this.touchStartY - touchEndY,
+                        );
+
+                        if (isPortrait) {
+                            if (
+                                swipeDistanceX > this.swipeThreshold &&
+                                swipeDistanceX > swipeDistanceY
+                            ) {
+                                const directionX = this.touchStartX - touchEndX;
+                                if (directionX > 0) {
+                                    this.incrementScore(team);
+                                } else {
+                                    this.decrementScore(team);
+                                }
+                                swipeDetected = true;
+                            }
+                        } else {
+                            if (
+                                swipeDistanceY > this.swipeThreshold &&
+                                swipeDistanceY > swipeDistanceX
+                            ) {
+                                const directionY = this.touchStartY - touchEndY;
+                                if (directionY > 0) {
+                                    this.incrementScore(team);
+                                } else {
+                                    this.decrementScore(team);
+                                }
+                                swipeDetected = true;
+                            }
+                        }
+
+                        if (!swipeDetected) {
+                            this.incrementScore(team);
+                        }
+                    },
+                    // Gerencia o Wake Lock quando a visibilidade da página muda
+                    handleVisibilityChange() {
+                        if (
+                            this.wakeLock !== null &&
+                            document.visibilityState === "visible"
+                        ) {
+                            this.requestWakeLock();
+                        }
+                    },
+                },
+                mounted() {
+                    // Adiciona um listener para reativar o wake lock se a aba ficar visível novamente
+                    document.addEventListener(
+                        "visibilitychange",
+                        this.handleVisibilityChange,
+                    );
+                },
+                beforeUnmount() {
+                    // Limpa o intervalo e o wake lock para evitar vazamentos de memória
+                    this.pauseTimer();
+                    document.removeEventListener(
+                        "visibilitychange",
+                        this.handleVisibilityChange,
+                    );
+                },
+            }).mount("#app");
+        </script>
+    </body>
+</html>
