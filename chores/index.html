@@ -550,10 +550,12 @@
                 const allTasks = getTasksFromStorage();
 
                 const singleDayTasks = allTasks.filter(
-                    (task) => task.checkedDays.filter(Boolean).length === 1,
+                    (task) =>
+                        task.isSingleDayMode &&
+                        task.checkedDays.filter(Boolean).length === 1,
                 );
                 const multiDayTasks = allTasks.filter(
-                    (task) => task.checkedDays.filter(Boolean).length !== 1,
+                    (task) => !task.isSingleDayMode,
                 );
 
                 renderSingleDaySection(singleDayTasks);
@@ -575,7 +577,7 @@
                 }
 
                 singleDayTasksSection.classList.remove("hidden");
-                let gridHtml = `<h3>Tarefas de Dia Único <span class="text-sm font-normal text-slate-500">(Clique para editar na tabela)</span></h3>`;
+                let gridHtml = `<h3>Tarefas de Dia Único <span class="text-sm font-normal text-slate-500">(Clique para editar)</span></h3>`;
                 gridHtml += `<div class="single-day-grid">`;
 
                 WEEK_DAYS.forEach((day) => {
@@ -597,7 +599,7 @@
                  style="${colorStyle}"
                  title="Clique para mover para a tabela e editar"
                  data-task-id="${task.id}"
-                 onclick="editSingleDayTask(event)">
+                 onclick="setTaskToMultiDayMode('${task.id}')">
               <span class="single-day-task-name">${task.name}</span>
               <button class="single-task-delete-btn" title="Excluir tarefa" onclick="deleteTask(event, '${task.id}')">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-red-500"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -748,43 +750,12 @@
                         checkbox.setAttribute("aria-checked", "false");
                     }
                     checkbox.tabIndex = 0;
-                    checkbox.onclick = function () {
-                        const isChecked = this.classList.toggle("checked");
-                        this.setAttribute("aria-checked", isChecked);
-
-                        // This is the core logic update
-                        updateTaskProperty(
-                            task.id,
-                            "checkedDays",
-                            (currentTask) => {
-                                currentTask.checkedDays[day.index] = isChecked;
-
-                                const checkedCount =
-                                    currentTask.checkedDays.filter(
-                                        Boolean,
-                                    ).length;
-
-                                // The "6-day rule"
-                                if (checkedCount === 6) {
-                                    const singleDayIndex =
-                                        currentTask.checkedDays.findIndex(
-                                            (d) => !d,
-                                        );
-                                    const newCheckedDays = Array(7).fill(false);
-                                    if (singleDayIndex !== -1) {
-                                        newCheckedDays[singleDayIndex] = true;
-                                    }
-                                    currentTask.checkedDays = newCheckedDays;
-                                }
-                            },
-                        );
-
-                        renderApp(); // Re-render to move task between sections if needed
-                    };
+                    checkbox.onclick = () =>
+                        handleCheckboxClick(task.id, day.index);
                     checkbox.onkeydown = (e) => {
                         if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
-                            e.target.click();
+                            handleCheckboxClick(task.id, day.index);
                         }
                     };
                     dayCell.appendChild(checkbox);
@@ -819,8 +790,7 @@
                     "delete-task-button text-red-500 hover:text-red-700 p-1";
                 deleteButton.title = `Excluir tarefa ${task.name}`;
                 deleteButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>`;
-                deleteButton.onclick = (event) => deleteTask(event, task.id);
-
+                deleteButton.onclick = (e) => deleteTask(e, task.id);
                 actionsCell.append(duplicateButton, deleteButton);
                 taskRow.appendChild(actionsCell);
 
@@ -874,16 +844,17 @@
                 try {
                     const tasks =
                         JSON.parse(localStorage.getItem("tasks")) || [];
-                    // Data sanitization for older formats or missing properties
+                    // Data sanitization for older formats or inconsistencies.
                     return tasks.map((task) => ({
-                        id: task.id || `task-${Date.now()}`,
-                        name: task.name || "Tarefa Sem Nome",
+                        id: task.id,
+                        name: task.name,
                         checkedDays:
                             Array.isArray(task.checkedDays) &&
                             task.checkedDays.length === 7
                                 ? task.checkedDays
                                 : Array(7).fill(false),
                         backgroundColor: task.backgroundColor || "#ffffff",
+                        isSingleDayMode: task.isSingleDayMode || false,
                     }));
                 } catch {
                     return [];
@@ -894,17 +865,27 @@
              * Updates a specific property of a task in localStorage.
              * @param {string} taskId - The ID of the task to update.
              * @param {string} key - The property key to update (e.g., 'name', 'checkedDays').
-             * @param {*} valueOrUpdater - The new value or a function that receives the task and modifies it.
+             * @param {*} value - The new value for the property.
              */
-            function updateTaskProperty(taskId, key, valueOrUpdater) {
+            function updateTaskProperty(taskId, key, value) {
                 const tasks = getTasksFromStorage();
                 const taskIndex = tasks.findIndex((t) => t.id === taskId);
                 if (taskIndex > -1) {
-                    if (typeof valueOrUpdater === "function") {
-                        valueOrUpdater(tasks[taskIndex]);
-                    } else {
-                        tasks[taskIndex][key] = valueOrUpdater;
-                    }
+                    tasks[taskIndex][key] = value;
+                    localStorage.setItem("tasks", JSON.stringify(tasks));
+                }
+            }
+
+            /**
+             * Updates multiple properties of a task in localStorage.
+             * @param {string} taskId - The ID of the task to update.
+             * @param {Object} updates - An object with keys and values to update.
+             */
+            function updateTaskProperties(taskId, updates) {
+                const tasks = getTasksFromStorage();
+                const taskIndex = tasks.findIndex((t) => t.id === taskId);
+                if (taskIndex > -1) {
+                    tasks[taskIndex] = { ...tasks[taskIndex], ...updates };
                     localStorage.setItem("tasks", JSON.stringify(tasks));
                 }
             }
@@ -929,6 +910,7 @@
                                 true,
                             ],
                             backgroundColor: "#dbeafe",
+                            isSingleDayMode: false,
                         },
                         {
                             id: `task-example-2`,
@@ -943,6 +925,7 @@
                                 false,
                             ],
                             backgroundColor: "#e0e7ff",
+                            isSingleDayMode: false,
                         },
                         {
                             id: `task-example-3`,
@@ -957,6 +940,7 @@
                                 true,
                             ],
                             backgroundColor: "#ffedd5",
+                            isSingleDayMode: true,
                         },
                     ];
                     localStorage.setItem("tasks", JSON.stringify(tasks));
@@ -965,33 +949,62 @@
             }
 
             // =================================================================================
-            // EVENT LISTENERS
+            // EVENT LISTENERS & HANDLERS
             // =================================================================================
 
             /**
-             * Moves a single-day task to the main table for detailed editing by clearing its day selection.
-             * @param {MouseEvent} event The click event.
+             * Moves a single-day task back to the main table for detailed editing.
+             * @param {string} taskId The ID of the task.
              */
-            function editSingleDayTask(event) {
-                const taskId = event.currentTarget.dataset.taskId;
-                // Just re-render. The task will appear in the main table if the user changes its days.
-                // The key is that clicking it does not change its state, just prepares it for editing.
-                // To move it back, we'll deselect its only day.
-                updateTaskProperty(taskId, "checkedDays", Array(7).fill(false));
+            function setTaskToMultiDayMode(taskId) {
+                updateTaskProperty(taskId, "isSingleDayMode", false);
                 renderApp();
             }
 
             /**
-             * Deletes a task from any view.
+             * Deletes a task from any section.
              * @param {MouseEvent} event The click event.
              * @param {string} taskId The ID of the task to delete.
              */
             function deleteTask(event, taskId) {
-                event.stopPropagation(); // Prevent parent clicks from firing
+                event.stopPropagation(); // Prevent other clicks from firing
                 const remainingTasks = getTasksFromStorage().filter(
                     (t) => t.id !== taskId,
                 );
                 localStorage.setItem("tasks", JSON.stringify(remainingTasks));
+                renderApp();
+            }
+
+            /**
+             * Handles the logic for clicking a day's checkbox, including the "6-day rule".
+             * @param {string} taskId The ID of the task being modified.
+             * @param {number} dayIndex The index of the day being clicked.
+             */
+            function handleCheckboxClick(taskId, dayIndex) {
+                const tasks = getTasksFromStorage();
+                const task = tasks.find((t) => t.id === taskId);
+                if (!task) return;
+
+                // Toggle the clicked day
+                task.checkedDays[dayIndex] = !task.checkedDays[dayIndex];
+
+                const checkedCount = task.checkedDays.filter(Boolean).length;
+
+                // Apply the "6-day rule"
+                if (checkedCount === 6) {
+                    const remainingDayIndex = task.checkedDays.findIndex(
+                        (day) => !day,
+                    );
+                    const newCheckedDays = Array(7).fill(false);
+                    newCheckedDays[remainingDayIndex] = true;
+                    updateTaskProperties(taskId, {
+                        checkedDays: newCheckedDays,
+                        isSingleDayMode: true,
+                    });
+                } else {
+                    updateTaskProperty(taskId, "checkedDays", task.checkedDays);
+                }
+
                 renderApp();
             }
 
@@ -1013,25 +1026,18 @@
                     const allTasks = getTasksFromStorage();
 
                     const singleDayTasks = allTasks.filter(
-                        (task) => task.checkedDays.filter(Boolean).length === 1,
+                        (task) => task.isSingleDayMode,
                     );
                     const multiDayTasks = allTasks.filter(
-                        (task) => task.checkedDays.filter(Boolean).length !== 1,
+                        (task) => !task.isSingleDayMode,
                     );
 
                     const reorderedMultiDayTasks = orderedIds
                         .map((id) => multiDayTasks.find((t) => t.id === id))
                         .filter(Boolean);
 
-                    // Reassemble the list, preserving the single-day tasks' order relative to each other.
-                    const singleDayTaskIds = singleDayTasks.map((t) => t.id);
-                    const originalOrderSingleDayTasks =
-                        getTasksFromStorage().filter((t) =>
-                            singleDayTaskIds.includes(t.id),
-                        );
-
                     const finalTaskList = [
-                        ...originalOrderSingleDayTasks,
+                        ...singleDayTasks,
                         ...reorderedMultiDayTasks,
                     ];
 
@@ -1095,6 +1101,7 @@
                     name: taskNameValue,
                     checkedDays: Array(7).fill(false),
                     backgroundColor: "#ffffff",
+                    isSingleDayMode: false,
                 };
                 const currentTasks = getTasksFromStorage();
                 localStorage.setItem(
@@ -1151,6 +1158,7 @@
                                         : Array(7).fill(false),
                                 backgroundColor:
                                     task.backgroundColor || "#ffffff",
+                                isSingleDayMode: task.isSingleDayMode || false,
                             }));
 
                             localStorage.setItem(
