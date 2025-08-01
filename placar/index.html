@@ -106,6 +106,10 @@
         font-size: 120vw !important;
       }
 
+      .score.score-reduced {
+        font-size: 90vw !important;
+      }
+
       .timer-display {
         font-size: 4vw !important;
       }
@@ -160,6 +164,10 @@
       font-size: 120vh;
       font-weight: bold;
       line-height: 1;
+    }
+
+    .score.score-reduced {
+      font-size: 90vh;
     }
 
     .timer-container {
@@ -281,7 +289,7 @@
         @contextmenu.prevent
       >
         <div class="team-name" @click.stop="swapTeamNames">{{ teamAName }}</div>
-        <div class="score">{{ scoreA }}</div>
+        <div class="score" :class="{ 'score-reduced': scoreA > 9 && scoreB > 9 }">{{ scoreA }}</div>
       </div>
       <div
         class="team team-b"
@@ -292,7 +300,7 @@
         @contextmenu.prevent
       >
         <div class="team-name" @click.stop="swapTeamNames">{{ teamBName }}</div>
-        <div class="score">{{ scoreB }}</div>
+        <div class="score" :class="{ 'score-reduced': scoreA > 9 && scoreB > 9 }">{{ scoreB }}</div>
       </div>
     </div>
 
