@@ -44,6 +44,11 @@
         top: 100%;
         left: 0;
       }
+      .score {
+        /* No modo retrato rotacionado, a altura disponível passa a ser a LARGURA do viewport (vw).
+           Portanto, usamos 80vw para corresponder a 80% da altura da tela. */
+        font-size: 80vw;
+      }
     }
 
     /* Container principal da aplicação */
@@ -97,7 +102,8 @@
 
     /* Estilo da pontuação */
     .score {
-      font-size: 100vh; /* Tamanho da fonte relativo à altura da tela */
+      /* Padrão para paisagem/desktop: 100% da altura do viewport */
+      font-size: 100vh;
       font-weight: bold;
       line-height: 1;
     }
