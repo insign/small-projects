@@ -231,7 +231,6 @@
         longPressTimer: null,
         isLongPress: false,
         longPressDuration: 500, // 500ms para considerar long press
-        hasAttemptedFullScreen: false,
       }
     },
     computed: {
@@ -245,21 +244,23 @@
     },
     methods: {
       attemptFullScreen() {
-        // Se já estiver em tela cheia, a tentativa já foi feita, ou se o navegador não suportar a API, não faz nada.
-        if (this.hasAttemptedFullScreen || document.fullscreenElement || !document.documentElement.requestFullscreen) {
+        console.log('---[ DEBUG TELA CHEIA ]---')
+        console.log('Evento de interação detectado, tentando entrar em tela cheia...')
+        console.log('Já está em tela cheia?', !!document.fullscreenElement)
+        console.log('Navegador suporta a API?', !!document.documentElement.requestFullscreen)
+
+        // Se já estiver em tela cheia ou se o navegador não suportar a API, não faz nada.
+        if (document.fullscreenElement || !document.documentElement.requestFullscreen) {
+          console.log('Ação de tela cheia ignorada. Motivo:', document.fullscreenElement ? 'Já está em tela cheia.' : 'API não suportada.')
           return
         }
 
-        // Marca que a tentativa foi feita para não pedir novamente na mesma sessão.
-        this.hasAttemptedFullScreen = true
-
-        // Tenta entrar em tela cheia. O pedido só pode ser feito a partir de um evento gerado pelo usuário.
+        // Tenta entrar em tela cheia.
         document.documentElement.requestFullscreen().catch(err => {
-          console.warn(`Não foi possível entrar em tela cheia: ${err.name}, ${err.message}`)
+          console.error(`ERRO AO SOLICITAR TELA CHEIA: ${err.name}, ${err.message}`)
         })
       },
       resetGame() {
-        this.attemptFullScreen()
         this.scoreA = 0
         this.scoreB = 0
         this.pauseTimer()
@@ -339,7 +340,6 @@
       },
       // Inicia a contagem para o "long press"
       pressStart(team) {
-        this.attemptFullScreen()
         this.isLongPress = false
         this.longPressTimer = setTimeout(() => {
           this.decrementScore(team)
@@ -363,6 +363,13 @@
       },
     },
     mounted() {
+      // Adiciona um listener para o PRIMEIRO clique/toque do usuário em qualquer lugar da tela
+      // para tentar entrar em tela cheia. A opção { once: true } garante que isso só aconteça uma vez.
+      // Isso é necessário porque a API de tela cheia requer uma interação direta do usuário.
+      console.log('Adicionando listener de primeiro clique para tela cheia.')
+      document.body.addEventListener('click', this.attemptFullScreen, { once: true })
+      document.body.addEventListener('touchstart', this.attemptFullScreen, { once: true })
+
       document.addEventListener(
         "visibilitychange",
         this.handleVisibilityChange,
