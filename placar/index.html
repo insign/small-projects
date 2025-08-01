@@ -46,6 +46,12 @@
       align-items: center;
       justify-content: center;
       color: white;
+      opacity: 1; /* Para transição */
+    }
+
+    #fullscreen-overlay.hidden {
+      opacity: 0;
+      pointer-events: none; /* Impede cliques quando escondido */
     }
 
     #fullscreen-button {
@@ -196,26 +202,30 @@
 </head>
 <body>
 
-<div id="fullscreen-overlay">
+<div id="fullscreen-overlay" class="hidden">
   <button id="fullscreen-button" onclick="handleFullscreenRequest()">Entrar em Tela Cheia</button>
 </div>
 
 <!-- SCRIPT ISOLADO E GLOBAL PARA TELA CHEIA -->
 <script>
   function handleFullscreenRequest() {
-    const overlay = document.getElementById('fullscreen-overlay')
-    const docEl = document.documentElement
-    const removeOverlay = () => { if (overlay) overlay.remove() }
-
-    if (!docEl.requestFullscreen && !docEl.webkitRequestFullscreen) {
-      if(overlay) overlay.style.display = 'none'
-      return
-    }
-
+    const docEl = document.documentElement;
     if (docEl.requestFullscreen) {
-      docEl.requestFullscreen().finally(removeOverlay)
+      docEl.requestFullscreen();
     } else if (docEl.webkitRequestFullscreen) {
-      docEl.webkitRequestFullscreen().finally(removeOverlay)
+      docEl.webkitRequestFullscreen();
+    }
+  }
+
+  function updateFullscreenUI() {
+    const overlay = document.getElementById('fullscreen-overlay');
+    if (!overlay) return;
+
+    // document.fullscreenElement será nulo se não estiver em tela cheia
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      overlay.classList.add('hidden');
+    } else {
+      overlay.classList.remove('hidden');
     }
   }
 
@@ -223,7 +233,12 @@
     const overlay = document.getElementById('fullscreen-overlay');
     const docEl = document.documentElement;
     if (!docEl.requestFullscreen && !docEl.webkitRequestFullscreen) {
-      if (overlay) overlay.remove();
+      if (overlay) overlay.remove(); // Remove completamente se a API não existe
+    } else {
+      // Adiciona os listeners e atualiza a UI para o estado inicial
+      document.addEventListener('fullscreenchange', updateFullscreenUI);
+      document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
+      updateFullscreenUI(); // Chama uma vez para definir o estado correto no carregamento
     }
   });
 </script>
