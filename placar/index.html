@@ -29,12 +29,43 @@
       background-color: #111;
     }
 
+    #fullscreen-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.85); /* Fundo escuro semi-transparente */
+      z-index: 9999; /* Garante que está acima de tudo */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    #fullscreen-button {
+      background-color: #2980b9;
+      border: 2px solid #3498db;
+      color: white;
+      padding: 20px 40px;
+      font-family: "Roboto Mono", monospace;
+      font-size: 24px;
+      font-weight: bold;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.2s;
+    }
+    #fullscreen-button:hover {
+      background-color: #3498db;
+    }
+    #fullscreen-button:active {
+      transform: scale(0.95);
+    }
+
     /* Força a orientação paisagem apenas em dispositivos de toque (celulares/tablets).
-  (hover: none) e (pointer: coarse) são usados para detectar dispositivos de toque.
-*/
+    */
     @media (orientation: portrait) and (hover: none) and (pointer: coarse) {
       html {
-        /* Gira a tela inteira em dispositivos no modo retrato */
         transform: rotate(-90deg);
         transform-origin: left top;
         width: 100vh;
@@ -45,13 +76,10 @@
         left: 0;
       }
       .score {
-        /* No modo retrato rotacionado, a altura disponível passa a ser a LARGURA do viewport (vw).
-           Portanto, usamos 80vw para corresponder a 80% da altura da tela. */
         font-size: 80vw !important;
       }
     }
 
-    /* Container principal da aplicação */
     #app {
       width: 100%;
       height: 100%;
@@ -61,37 +89,28 @@
       position: relative;
     }
 
-    /* Container do placar */
     .scoreboard {
       display: flex;
       width: 100%;
       height: 100%;
     }
 
-    /* Estilo de cada time */
     .team {
-      flex: 1; /* Divide o espaço igualmente */
+      flex: 1;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       color: white;
       position: relative;
-      user-select: none; /* Impede a seleção de texto */
+      user-select: none;
       transition: background-color 0.3s ease;
-      cursor: pointer; /* Indica que toda a área é clicável */
+      cursor: pointer;
     }
 
-    /* Cores de fundo para cada time */
-    .team-a {
-      background-color: #c0392b; /* Vermelho */
-    }
+    .team-a { background-color: #c0392b; }
+    .team-b { background-color: #2980b9; }
 
-    .team-b {
-      background-color: #2980b9; /* Azul */
-    }
-
-    /* Nome do time */
     .team-name {
       font-size: 5vh;
       font-weight: bold;
@@ -100,15 +119,12 @@
       top: 5%;
     }
 
-    /* Estilo da pontuação */
     .score {
-      /* Padrão para paisagem/desktop: 100% da altura do viewport */
       font-size: 100vh;
       font-weight: bold;
       line-height: 1;
     }
 
-    /* Container do cronômetro */
     .timer-container {
       position: absolute;
       top: 20px;
@@ -127,7 +143,6 @@
       font-weight: bold;
     }
 
-    /* Container para os botões de controle */
     .controls {
       position: absolute;
       bottom: 20px;
@@ -136,7 +151,6 @@
       z-index: 10;
     }
 
-    /* Estilo do botão de reset */
     .reset-button {
       background-color: rgba(255, 255, 255, 0.2);
       border: 2px solid rgba(255, 255, 255, 0.5);
@@ -162,14 +176,53 @@
   </style>
 </head>
 <body>
+
+<div id="fullscreen-overlay">
+  <!-- O evento agora é chamado diretamente via onclick -->
+  <button id="fullscreen-button" onclick="handleFullscreenRequest()">Entrar em Tela Cheia</button>
+</div>
+
+<!-- SCRIPT ISOLADO E GLOBAL PARA TELA CHEIA -->
+<script>
+  // Esta função está no escopo global para ser acessível pelo 'onclick'
+  function handleFullscreenRequest() {
+    console.log('---[ DEBUG TELA CHEIA v5 - ONCLICK DIRETO ]---')
+    console.log('Botão clicado, função global disparada.')
+
+    const overlay = document.getElementById('fullscreen-overlay')
+    const docEl = document.documentElement
+
+    // Função para remover o overlay, chamada em qualquer cenário
+    const removeOverlay = () => {
+      if (overlay) {
+        console.log('Removendo o overlay.')
+        overlay.remove()
+      }
+    }
+
+    if (docEl.requestFullscreen) {
+      console.log('API encontrada. Solicitando tela cheia...')
+      docEl.requestFullscreen().then(() => {
+        console.log('SUCESSO: Entrou em tela cheia.')
+        removeOverlay()
+      }).catch(err => {
+        console.error(`ERRO AO SOLICITAR TELA CHEIA: ${err.name}, ${err.message}`)
+        removeOverlay() // Remove mesmo em caso de falha
+      })
+    } else {
+      console.warn('API requestFullscreen não suportada.')
+      removeOverlay()
+    }
+  }
+</script>
+
+
 <div id="app">
-  <!-- Cronômetro -->
   <div class="timer-container">
     <span class="timer-display">{{ formattedTime }}</span>
   </div>
 
   <div class="scoreboard">
-    <!-- Seção do Time A -->
     <div
       class="team team-a"
       @mousedown.prevent="pressStart('A')"
@@ -181,8 +234,6 @@
       <div class="team-name">PORTA</div>
       <div class="score">{{ scoreA }}</div>
     </div>
-
-    <!-- Seção do Time B -->
     <div
       class="team team-b"
       @mousedown.prevent="pressStart('B')"
@@ -196,21 +247,14 @@
     </div>
   </div>
 
-  <!-- Botões de Controle -->
   <div class="controls">
     <button
       @click.stop="resetGame"
       class="reset-button"
       title="Zerar Placar e Pausar Cronômetro"
     >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="white"
-      >
-        <path
-          d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"
-        />
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
+        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
       </svg>
     </button>
   </div>
@@ -230,36 +274,17 @@
         wakeLock: null,
         longPressTimer: null,
         isLongPress: false,
-        longPressDuration: 500, // 500ms para considerar long press
+        longPressDuration: 500,
       }
     },
     computed: {
       formattedTime() {
         const minutes = Math.floor(this.timerTotalSeconds / 60)
         const seconds = this.timerTotalSeconds % 60
-        return `${String(minutes).padStart(2, "0")}:${String(
-          seconds,
-        ).padStart(2, "0")}`
+        return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
       },
     },
     methods: {
-      attemptFullScreen() {
-        console.log('---[ DEBUG TELA CHEIA ]---')
-        console.log('Evento de interação detectado, tentando entrar em tela cheia...')
-        console.log('Já está em tela cheia?', !!document.fullscreenElement)
-        console.log('Navegador suporta a API?', !!document.documentElement.requestFullscreen)
-
-        // Se já estiver em tela cheia ou se o navegador não suportar a API, não faz nada.
-        if (document.fullscreenElement || !document.documentElement.requestFullscreen) {
-          console.log('Ação de tela cheia ignorada. Motivo:', document.fullscreenElement ? 'Já está em tela cheia.' : 'API não suportada.')
-          return
-        }
-
-        // Tenta entrar em tela cheia.
-        document.documentElement.requestFullscreen().catch(err => {
-          console.error(`ERRO AO SOLICITAR TELA CHEIA: ${err.name}, ${err.message}`)
-        })
-      },
       resetGame() {
         this.scoreA = 0
         this.scoreB = 0
@@ -269,9 +294,7 @@
         if (this.timerIsRunning) return
         this.timerIsRunning = true
         this.requestWakeLock()
-        this.timerId = setInterval(() => {
-          this.timerTotalSeconds++
-        }, 1000)
+        this.timerId = setInterval(() => { this.timerTotalSeconds++ }, 1000)
       },
       pauseTimer() {
         this.timerIsRunning = false
@@ -281,26 +304,14 @@
       async requestWakeLock() {
         if ("wakeLock" in navigator) {
           try {
-            this.wakeLock =
-              await navigator.wakeLock.request("screen")
-            this.wakeLock.addEventListener(
-              "release",
-              () => {
-                console.log(
-                  "Wake Lock foi liberado pelo sistema.",
-                )
-              },
-            )
+            this.wakeLock = await navigator.wakeLock.request("screen")
+            this.wakeLock.addEventListener("release", () => { console.log("Wake Lock foi liberado pelo sistema.") })
             console.log("Wake Lock está ativo.")
           } catch (err) {
-            console.error(
-              `Não foi possível ativar o Wake Lock: ${err.name}, ${err.message}`,
-            )
+            console.error(`Não foi possível ativar o Wake Lock: ${err.name}, ${err.message}`)
           }
         } else {
-          console.log(
-            "API Wake Lock não é suportada neste navegador.",
-          )
+          console.log("API Wake Lock não é suportada neste navegador.")
         }
       },
       async releaseWakeLock() {
@@ -310,35 +321,23 @@
             this.wakeLock = null
             console.log("Wake Lock foi liberado.")
           } catch (err) {
-            console.error(
-              `Falha ao liberar o Wake Lock: ${err.name}, ${err.message}`,
-            )
+            console.error(`Falha ao liberar o Wake Lock: ${err.name}, ${err.message}`)
           }
         }
       },
       incrementScore(team) {
-        const wasGameAtZero =
-                this.scoreA === 0 && this.scoreB === 0
-
-        if (team === "A") {
-          this.scoreA++
-        } else {
-          this.scoreB++
-        }
-
+        const wasGameAtZero = this.scoreA === 0 && this.scoreB === 0
+        if (team === "A") this.scoreA++
+        else this.scoreB++
         if (wasGameAtZero) {
           this.timerTotalSeconds = 0
           this.startTimer()
         }
       },
       decrementScore(team) {
-        if (team === "A" && this.scoreA > 0) {
-          this.scoreA--
-        } else if (team === "B" && this.scoreB > 0) {
-          this.scoreB--
-        }
+        if (team === "A" && this.scoreA > 0) this.scoreA--
+        else if (team === "B" && this.scoreB > 0) this.scoreB--
       },
-      // Inicia a contagem para o "long press"
       pressStart(team) {
         this.isLongPress = false
         this.longPressTimer = setTimeout(() => {
@@ -346,41 +345,22 @@
           this.isLongPress = true
         }, this.longPressDuration)
       },
-      // Finaliza a ação (clique curto ou long press)
       pressEnd(team) {
         clearTimeout(this.longPressTimer)
-        if (!this.isLongPress) {
-          this.incrementScore(team)
-        }
+        if (!this.isLongPress) this.incrementScore(team)
       },
       handleVisibilityChange() {
-        if (
-          this.wakeLock !== null &&
-          document.visibilityState === "visible"
-        ) {
+        if (this.wakeLock !== null && document.visibilityState === "visible") {
           this.requestWakeLock()
         }
       },
     },
     mounted() {
-      // Adiciona um listener para o PRIMEIRO clique/toque do usuário em qualquer lugar da tela
-      // para tentar entrar em tela cheia. A opção { once: true } garante que isso só aconteça uma vez.
-      // Isso é necessário porque a API de tela cheia requer uma interação direta do usuário.
-      console.log('Adicionando listener de primeiro clique para tela cheia.')
-      document.body.addEventListener('click', this.attemptFullScreen, { once: true })
-      document.body.addEventListener('touchstart', this.attemptFullScreen, { once: true })
-
-      document.addEventListener(
-        "visibilitychange",
-        this.handleVisibilityChange,
-      )
+      document.addEventListener("visibilitychange", this.handleVisibilityChange)
     },
     beforeUnmount() {
       this.pauseTimer()
-      document.removeEventListener(
-        "visibilitychange",
-        this.handleVisibilityChange,
-      )
+      document.removeEventListener("visibilitychange", this.handleVisibilityChange)
     },
   }).mount("#app")
 </script>
