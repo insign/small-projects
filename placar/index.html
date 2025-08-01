@@ -29,6 +29,11 @@
       background-color: #111;
     }
 
+    /* Regra geral para transições suaves e rápidas */
+    * {
+      transition: all 0.2s ease-in-out;
+    }
+
     #fullscreen-overlay {
       position: fixed;
       top: 0;
@@ -53,7 +58,6 @@
       font-weight: bold;
       border-radius: 12px;
       cursor: pointer;
-      transition: background-color 0.2s, transform 0.2s;
     }
     #fullscreen-button:hover {
       background-color: #3498db;
@@ -109,7 +113,6 @@
       color: white;
       position: relative;
       user-select: none;
-      transition: background-color 0.3s ease;
       cursor: pointer;
     }
 
@@ -140,7 +143,6 @@
       padding: 5px 25px;
       border-radius: 20px;
       border: 2px solid rgba(255, 255, 255, 0.2);
-      transition: background-color 0.3s ease, border-color 0.3s ease;
     }
 
     .timer-container.timer-paused {
@@ -152,6 +154,10 @@
       font-size: 4vh;
       color: white;
       font-weight: bold;
+    }
+
+    .timer-container.timer-paused .timer-display {
+      font-size: 8vh; /* Dobro da fonte quando pausado */
     }
 
     .controls {
@@ -173,7 +179,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background-color 0.2s;
     }
 
     .reset-button:hover {
@@ -199,22 +204,18 @@
     const docEl = document.documentElement
     const removeOverlay = () => { if (overlay) overlay.remove() }
 
-    // Esconde o botão se a API não for suportada para evitar confusão.
     if (!docEl.requestFullscreen && !docEl.webkitRequestFullscreen) {
       if(overlay) overlay.style.display = 'none'
       return
     }
 
-    // Tenta a API padrão, depois a do Webkit para maior compatibilidade
     if (docEl.requestFullscreen) {
       docEl.requestFullscreen().finally(removeOverlay)
-    } else if (docEl.webkitRequestFullscreen) { // Fallback para Safari
+    } else if (docEl.webkitRequestFullscreen) {
       docEl.webkitRequestFullscreen().finally(removeOverlay)
     }
   }
 
-  // Se o documento já estiver carregado, verifica se a API existe. Se não, oculta o overlay.
-  // Isso cobre casos onde a tela cheia não é suportada de forma alguma.
   document.addEventListener('DOMContentLoaded', () => {
     const overlay = document.getElementById('fullscreen-overlay');
     const docEl = document.documentElement;
@@ -227,7 +228,6 @@
 
 <div id="rotation-wrapper">
   <div id="app">
-    <!-- Adicionada a classe condicional 'timer-paused' -->
     <div class="timer-container" :class="{ 'timer-paused': !timerIsRunning && timerTotalSeconds > 0 }">
       <span class="timer-display">{{ formattedTime }}</span>
     </div>
@@ -299,7 +299,7 @@
       resetGame() {
         this.scoreA = 0
         this.scoreB = 0
-        this.pauseTimer()
+        this.pauseTimer() // Apenas zera os placares e pausa o tempo atual
       },
       startTimer() {
         if (this.timerIsRunning) return
@@ -337,11 +337,15 @@
         }
       },
       incrementScore(team) {
+        // Verifica se é o primeiro ponto de um jogo (placar zerado)
         const wasGameAtZero = this.scoreA === 0 && this.scoreB === 0
+
         if (team === "A") this.scoreA++
         else this.scoreB++
+
+        // Se era o primeiro ponto, define o tempo para 30s e inicia o cronômetro
         if (wasGameAtZero) {
-          this.timerTotalSeconds = 0
+          this.timerTotalSeconds = 30
           this.startTimer()
         }
       },
