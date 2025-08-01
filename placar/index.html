@@ -125,6 +125,8 @@
       text-transform: uppercase;
       position: absolute;
       top: 5%;
+      cursor: pointer; /* Indica que o nome é clicável */
+      z-index: 10; /* Garante que o nome esteja acima da área de clique do placar */
     }
 
     .score {
@@ -241,7 +243,7 @@
         @touchend="pressEnd('A')"
         @contextmenu.prevent
       >
-        <div class="team-name">PORTA</div>
+        <div class="team-name" @click.stop="swapTeamNames">{{ teamAName }}</div>
         <div class="score">{{ scoreA }}</div>
       </div>
       <div
@@ -252,7 +254,7 @@
         @touchend="pressEnd('B')"
         @contextmenu.prevent
       >
-        <div class="team-name">Fundo</div>
+        <div class="team-name" @click.stop="swapTeamNames">{{ teamBName }}</div>
         <div class="score">{{ scoreB }}</div>
       </div>
     </div>
@@ -279,6 +281,8 @@
       return {
         scoreA: 0,
         scoreB: 0,
+        teamAName: 'PORTA',
+        teamBName: 'Fundo',
         timerTotalSeconds: 0,
         timerIsRunning: false,
         timerId: null,
@@ -296,10 +300,15 @@
       },
     },
     methods: {
+      swapTeamNames() {
+        const tempName = this.teamAName
+        this.teamAName = this.teamBName
+        this.teamBName = tempName
+      },
       resetGame() {
         this.scoreA = 0
         this.scoreB = 0
-        this.pauseTimer() // Apenas zera os placares e pausa o tempo atual
+        this.pauseTimer()
       },
       startTimer() {
         if (this.timerIsRunning) return
@@ -337,13 +346,11 @@
         }
       },
       incrementScore(team) {
-        // Verifica se é o primeiro ponto de um jogo (placar zerado)
         const wasGameAtZero = this.scoreA === 0 && this.scoreB === 0
 
         if (team === "A") this.scoreA++
         else this.scoreB++
 
-        // Se era o primeiro ponto, define o tempo para 30s e inicia o cronômetro
         if (wasGameAtZero) {
           this.timerTotalSeconds = 30
           this.startTimer()
