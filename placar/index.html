@@ -231,6 +231,7 @@
         longPressTimer: null,
         isLongPress: false,
         longPressDuration: 500, // 500ms para considerar long press
+        hasAttemptedFullScreen: false,
       }
     },
     computed: {
@@ -243,7 +244,22 @@
       },
     },
     methods: {
+      attemptFullScreen() {
+        // Se já estiver em tela cheia, a tentativa já foi feita, ou se o navegador não suportar a API, não faz nada.
+        if (this.hasAttemptedFullScreen || document.fullscreenElement || !document.documentElement.requestFullscreen) {
+          return
+        }
+
+        // Marca que a tentativa foi feita para não pedir novamente na mesma sessão.
+        this.hasAttemptedFullScreen = true
+
+        // Tenta entrar em tela cheia. O pedido só pode ser feito a partir de um evento gerado pelo usuário.
+        document.documentElement.requestFullscreen().catch(err => {
+          console.warn(`Não foi possível entrar em tela cheia: ${err.name}, ${err.message}`)
+        })
+      },
       resetGame() {
+        this.attemptFullScreen()
         this.scoreA = 0
         this.scoreB = 0
         this.pauseTimer()
@@ -323,6 +339,7 @@
       },
       // Inicia a contagem para o "long press"
       pressStart(team) {
+        this.attemptFullScreen()
         this.isLongPress = false
         this.longPressTimer = setTimeout(() => {
           this.decrementScore(team)
