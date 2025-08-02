@@ -136,11 +136,34 @@
       height: 100%;
     }
 
-    /* As regras de rotação foram movidas para classes controladas por JS */
-    /* para um controle mais robusto no Chrome Mobile */
+    /* Regra de rotação via Media Query para navegadores que a interpretam corretamente (ex: Firefox Mobile) */
+    @media (orientation: portrait) and (hover: none) and (pointer: coarse) {
+      #rotation-wrapper {
+        width: 100vh;
+        height: 100vw;
+        overflow: hidden;
+        position: fixed;
+        top: 0;
+        left: 0;
+        transform-origin: top left;
+        transform: translateY(100vh) rotate(-90deg);
+      }
+      .score {
+        font-size: 120vw !important;
+      }
+      .score.score-reduced {
+        font-size: 90vw !important;
+      }
+      .timer-display {
+        font-size: 4vw !important;
+      }
+      .timer-container.timer-paused .timer-display {
+        font-size: 8vw !important;
+      }
+    }
 
-    /* Classe adicionada via JS para forçar a rotação */
-    #rotation-wrapper.force-landscape {
+    /* Classe adicionada via JS para forçar a rotação no Chrome Mobile, que tem bugs com a media query */
+    #rotation-wrapper.force-landscape-chrome {
       width: 100vh;
       height: 100vw;
       overflow: hidden;
@@ -151,19 +174,19 @@
       transform: translateY(100vh) rotate(-90deg);
     }
 
-    /* Ajustes de fonte quando a rotação forçada está ativa */
-    .force-landscape .score {
+    .force-landscape-chrome .score {
       font-size: 120vw !important;
     }
-    .force-landscape .score.score-reduced {
+    .force-landscape-chrome .score.score-reduced {
       font-size: 90vw !important;
     }
-    .force-landscape .timer-display {
+    .force-landscape-chrome .timer-display {
       font-size: 4vw !important;
     }
-    .force-landscape .timer-container.timer-paused .timer-display {
+    .force-landscape-chrome .timer-container.timer-paused .timer-display {
       font-size: 8vw !important;
     }
+
 
     #app {
       width: 100%;
@@ -296,7 +319,6 @@
     const overlay = document.getElementById('fullscreen-overlay');
     if (!overlay) return;
 
-    // document.fullscreenElement será nulo se não estiver em tela cheia
     if (document.fullscreenElement || document.webkitFullscreenElement) {
       overlay.classList.add('hidden');
     } else {
@@ -308,12 +330,11 @@
     const overlay = document.getElementById('fullscreen-overlay');
     const docEl = document.documentElement;
     if (!docEl.requestFullscreen && !docEl.webkitRequestFullscreen) {
-      if (overlay) overlay.remove(); // Remove completamente se a API não existe
+      if (overlay) overlay.remove();
     } else {
-      // Adiciona os listeners e atualiza a UI para o estado inicial
       document.addEventListener('fullscreenchange', updateFullscreenUI);
       document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
-      updateFullscreenUI(); // Chama uma vez para definir o estado correto no carregamento
+      updateFullscreenUI();
     }
   });
 </script>
@@ -373,7 +394,7 @@
         scoreA: 0,
         scoreB: 0,
         teamAName: 'PORTA',
-        teamBName: 'FUNDO',
+        teamBName: 'Fundo',
         timerTotalSeconds: 0,
         timerIsRunning: false,
         timerId: null,
@@ -392,16 +413,16 @@
       },
     },
     methods: {
-      applyRotationFix() {
+      applyChromeRotationFix() {
         const isChromeMobile = /Chrome/.test(navigator.userAgent) && /Mobi/.test(navigator.userAgent)
         const isPortrait = this.orientationMediaQuery.matches
         const wrapper = document.getElementById('rotation-wrapper')
 
         if (wrapper) {
           if (isChromeMobile && isPortrait) {
-            wrapper.classList.add('force-landscape')
+            wrapper.classList.add('force-landscape-chrome')
           } else {
-            wrapper.classList.remove('force-landscape')
+            wrapper.classList.remove('force-landscape-chrome')
           }
         }
       },
@@ -485,16 +506,15 @@
     mounted() {
       document.addEventListener("visibilitychange", this.handleVisibilityChange)
 
-      // Lógica de rotação forçada
       this.orientationMediaQuery = window.matchMedia("(orientation: portrait)")
-      this.orientationMediaQuery.addEventListener('change', this.applyRotationFix)
-      this.applyRotationFix() // Aplica na inicialização
+      this.orientationMediaQuery.addEventListener('change', this.applyChromeRotationFix)
+      this.applyChromeRotationFix()
     },
     beforeUnmount() {
       this.pauseTimer()
       document.removeEventListener("visibilitychange", this.handleVisibilityChange)
       if (this.orientationMediaQuery) {
-        this.orientationMediaQuery.removeEventListener('change', this.applyRotationFix)
+        this.orientationMediaQuery.removeEventListener('change', this.applyChromeRotationFix)
       }
     },
   }).mount("#app")
