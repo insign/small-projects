@@ -18,7 +18,7 @@
   <link rel="icon" href="favicon.png" type="image/svg+xml">
   <link rel="apple-touch-icon" href="favicon.png" type="image/svg+xml">
 
-  <script src="https://unpkg.com/vue@3"></script>
+  <script src="https://unpkg.com/vue@3.4.27/dist/vue.global.prod.js"></script>
   <style>
     /* cyrillic-ext */
     @font-face {
@@ -91,7 +91,6 @@
     /* Regra geral para transições suaves e rápidas */
     * {
       transition: all 0.4s ease-in-out;
-      box-sizing: border-box;
     }
 
     #fullscreen-overlay {
@@ -137,17 +136,33 @@
       height: 100%;
     }
 
-    /* Força a orientação paisagem apenas em dispositivos de toque (celulares/tablets). */
+    /* Força a orientação paisagem apenas em dispositivos de toque (celulares/tablets).
+    */
     @media (orientation: portrait) and (hover: none) and (pointer: coarse) {
       #rotation-wrapper {
         transform: rotate(-90deg);
-        transform-origin: left top;
+        transform-origin: bottom left; /* CORREÇÃO: Usar 'bottom left' é mais robusto entre navegadores */
         width: 100vh;
         height: 100vw;
         overflow: hidden;
         position: absolute;
-        top: 100%;
+        top: 0; /* CORREÇÃO: Alterado de '100%' para '0' para funcionar com a nova origem da transformação */
         left: 0;
+      }
+      .score {
+        font-size: 120vw !important;
+      }
+
+      .score.score-reduced {
+        font-size: 90vw !important;
+      }
+
+      .timer-display {
+        font-size: 4vw !important;
+      }
+
+      .timer-container.timer-paused .timer-display {
+        font-size: 8vw !important; /* Dobro da fonte quando pausado */
       }
     }
 
@@ -179,6 +194,7 @@
     }
 
     .team-a { background-color: #F00; }
+
     .team-b { background-color: #00F; }
 
     .team-name {
@@ -192,13 +208,13 @@
     }
 
     .score {
-      font-size: 120vmin; /* CORREÇÃO: Usar vmin para ser relativo à menor dimensão do viewport */
+      font-size: 120vh;
       font-weight: bold;
       line-height: 1;
     }
 
     .score.score-reduced {
-      font-size: 90vmin; /* CORREÇÃO: Usar vmin aqui também */
+      font-size: 90vh;
     }
 
     .timer-container {
@@ -220,13 +236,13 @@
     }
 
     .timer-display {
-      font-size: 4vmin; /* CORREÇÃO: Usar vmin para consistência */
+      font-size: 4vh;
       color: white;
       font-weight: bold;
     }
 
     .timer-container.timer-paused .timer-display {
-      font-size: 8vmin; /* CORREÇÃO: Usar vmin para consistência */
+      font-size: 8vh; /* Dobro da fonte quando pausado */
     }
 
     .controls {
@@ -320,7 +336,7 @@
         @contextmenu.prevent
       >
         <div class="team-name" @click.stop="swapTeamNames">{{ teamAName }}</div>
-        <div class="score" :class="{ 'score-reduced': scoreA > 9 || scoreB > 9 }">{{ scoreA }}</div>
+        <div class="score" :class="{ 'score-reduced': scoreA > 9 && scoreB > 9 }">{{ scoreA }}</div>
       </div>
       <div
         class="team team-b"
@@ -331,7 +347,7 @@
         @contextmenu.prevent
       >
         <div class="team-name" @click.stop="swapTeamNames">{{ teamBName }}</div>
-        <div class="score" :class="{ 'score-reduced': scoreA > 9 || scoreB > 9 }">{{ scoreB }}</div>
+        <div class="score" :class="{ 'score-reduced': scoreA > 9 && scoreB > 9 }">{{ scoreB }}</div>
       </div>
     </div>
 
@@ -350,67 +366,51 @@
 </div>
 
 <script>
-  const { createApp } = Vue
+  const { createApp, ref, computed, onMounted, onBeforeUnmount } = Vue
 
   createApp({
-    data() {
-      return {
-        scoreA: 0,
-        scoreB: 0,
-        teamAName: 'PORTA',
-        teamBName: 'Fundo',
-        timerTotalSeconds: 0,
-        timerIsRunning: false,
-        timerId: null,
-        wakeLock: null,
-        longPressTimer: null,
-        isLongPress: false,
-        longPressDuration: 500,
-      }
-    },
-    computed: {
-      formattedTime() {
-        const minutes = Math.floor(this.timerTotalSeconds / 60)
-        const seconds = this.timerTotalSeconds % 60
+    setup() {
+      const scoreA = ref(0)
+      const scoreB = ref(0)
+      const teamAName = ref('PORTA')
+      const teamBName = ref('Fundo')
+      const timerTotalSeconds = ref(0)
+      const timerIsRunning = ref(false)
+      let timerId = null
+      let wakeLock = null
+      let longPressTimer = null
+      let isLongPress = false
+      const longPressDuration = 500
+
+      const formattedTime = computed(() => {
+        const minutes = Math.floor(timerTotalSeconds.value / 60)
+        const seconds = timerTotalSeconds.value % 60
         return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
-      },
-    },
-    methods: {
-      swapTeamNames() {
-        const tempName = this.teamAName
-        this.teamAName = this.teamBName
-        this.teamBName = tempName
-      },
-      resetGame() {
-        if (confirm('Tem certeza que deseja zerar o jogo?')) {
-          this.scoreA = 0
-          this.scoreB = 0
-          this.pauseTimer()
-        }
-      },
-      startTimer() {
-        if (this.timerIsRunning) return
-        this.timerIsRunning = true
-        this.requestWakeLock()
-        this.timerId = setInterval(() => { this.timerTotalSeconds++ }, 1000)
-      },
-      pauseTimer() {
-        this.timerIsRunning = false
-        clearInterval(this.timerId)
-        this.releaseWakeLock()
-      },
-      toggleTimer() {
-        if(this.timerIsRunning) {
-          this.pauseTimer()
-        } else {
-          this.startTimer()
-        }
-      },
-      async requestWakeLock() {
+      })
+
+      const swapTeamNames = () => {
+        const tempName = teamAName.value
+        teamAName.value = teamBName.value
+        teamBName.value = tempName
+      }
+
+      const pauseTimer = () => {
+        timerIsRunning.value = false
+        clearInterval(timerId)
+        releaseWakeLock()
+      }
+
+      const resetGame = () => {
+        scoreA.value = 0
+        scoreB.value = 0
+        pauseTimer()
+      }
+
+      const requestWakeLock = async () => {
         if ("wakeLock" in navigator) {
           try {
-            this.wakeLock = await navigator.wakeLock.request("screen")
-            this.wakeLock.addEventListener("release", () => { console.log("Wake Lock foi liberado pelo sistema.") })
+            wakeLock = await navigator.wakeLock.request("screen")
+            wakeLock.addEventListener("release", () => { console.log("Wake Lock foi liberado pelo sistema.") })
             console.log("Wake Lock está ativo.")
           } catch (err) {
             console.error(`Não foi possível ativar o Wake Lock: ${err.name}, ${err.message}`)
@@ -418,65 +418,93 @@
         } else {
           console.log("API Wake Lock não é suportada neste navegador.")
         }
-      },
-      async releaseWakeLock() {
-        if (this.wakeLock !== null) {
+      }
+
+      const releaseWakeLock = async () => {
+        if (wakeLock !== null) {
           try {
-            await this.wakeLock.release()
-            this.wakeLock = null
+            await wakeLock.release()
+            wakeLock = null
             console.log("Wake Lock foi liberado.")
           } catch (err) {
             console.error(`Falha ao liberar o Wake Lock: ${err.name}, ${err.message}`)
           }
         }
-      },
-      incrementScore(team) {
-        // O jogo só começa a contar o tempo no primeiro ponto
-        const wasGameAtZero = this.scoreA === 0 && this.scoreB === 0 && this.timerTotalSeconds === 0
+      }
 
-        if (team === "A") this.scoreA++
-        else this.scoreB++
+      const startTimer = () => {
+        if (timerIsRunning.value) return
+        timerIsRunning.value = true
+        requestWakeLock()
+        timerId = setInterval(() => { timerTotalSeconds.value++ }, 1000)
+      }
+
+      const incrementScore = (team) => {
+        const wasGameAtZero = scoreA.value === 0 && scoreB.value === 0
+
+        if (team === "A") scoreA.value++
+        else scoreB.value++
 
         if (wasGameAtZero) {
-          this.startTimer()
-        } else if (!this.timerIsRunning) {
-          // Se o timer estiver pausado, despausa ao pontuar
-          this.startTimer()
+          timerTotalSeconds.value = 0
+          startTimer()
+        } else if (!timerIsRunning.value) {
+          startTimer()
         }
-      },
-      decrementScore(team) {
-        if (team === "A" && this.scoreA > 0) this.scoreA--
-        else if (team === "B" && this.scoreB > 0) this.scoreB--
-      },
-      pressStart(team) {
-        this.isLongPress = false
-        this.longPressTimer = setTimeout(() => {
-          this.decrementScore(team)
-          this.isLongPress = true
-        }, this.longPressDuration)
-      },
-      pressEnd(team) {
-        clearTimeout(this.longPressTimer)
-        if (!this.isLongPress) this.incrementScore(team)
-      },
-      handleVisibilityChange() {
-        if (this.wakeLock !== null && document.visibilityState === "visible") {
-          this.requestWakeLock()
-        }
-      },
-    },
-    mounted() {
-      // Inicia o timer pausado, permitindo que o primeiro clique para pontuar o inicie.
-      this.pauseTimer()
-      document.addEventListener("visibilitychange", this.handleVisibilityChange)
+      }
 
-      // Alterado para usar o Vue para o evento de clique do timer
-      this.$el.querySelector('.timer-container').addEventListener('click', this.toggleTimer)
-    },
-    beforeUnmount() {
-      this.pauseTimer()
-      document.removeEventListener("visibilitychange", this.handleVisibilityChange)
-    },
+      const decrementScore = (team) => {
+        if (team === "A" && scoreA.value > 0) scoreA.value--
+        else if (team === "B" && scoreB.value > 0) scoreB.value--
+      }
+
+      const pressStart = (team) => {
+        isLongPress = false
+        longPressTimer = setTimeout(() => {
+          decrementScore(team)
+          isLongPress = true
+        }, longPressDuration)
+      }
+
+      const pressEnd = (team) => {
+        clearTimeout(longPressTimer)
+        if (!isLongPress) incrementScore(team)
+      }
+
+      const handleVisibilityChange = () => {
+        if (wakeLock !== null && document.visibilityState === "visible") {
+          requestWakeLock()
+        }
+      }
+
+      onMounted(() => {
+        document.addEventListener("visibilitychange", handleVisibilityChange)
+
+        // Pausa o timer se o jogo ainda não começou
+        if (scoreA.value === 0 && scoreB.value === 0) {
+          pauseTimer()
+        }
+      })
+
+      onBeforeUnmount(() => {
+        pauseTimer()
+        document.removeEventListener("visibilitychange", handleVisibilityChange)
+      })
+
+      return {
+        scoreA,
+        scoreB,
+        teamAName,
+        teamBName,
+        timerTotalSeconds,
+        timerIsRunning,
+        formattedTime,
+        swapTeamNames,
+        resetGame,
+        pressStart,
+        pressEnd,
+      }
+    }
   }).mount("#app")
 </script>
 </body>
