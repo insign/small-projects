@@ -15,20 +15,20 @@
   <meta name="apple-mobile-web-app-title" content="Placar">
   <meta name="theme-color" content="#111111">
 
-  <!-- Favicon e Ícone para Home Screen (iOS) -->
-  <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon.png" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="favicon.png" type="image/svg+xml">
 
-  <!-- Importa o Vue.js via CDN -->
-  <script src="//unpkg.com/vue@3.5.18/dist/vue.global.prod.js"></script>
-  <link rel="preconnect" href="//fonts.googleapis.com" />
-  <link rel="preconnect" href="//fonts.gstatic.com" crossorigin />
-  <!-- Fonte Roboto Mono -->
-  <link
-    href="//fonts.googleapis.com/css2?family=Roboto+Mono:wght@700&display=swap"
-    rel="stylesheet"
-  />
+  <script src="vue3518.js"></script>
   <style>
+    @font-face {
+      font-family: 'Roboto Mono';
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url(roboto-mono-bold-latin-ext.woff2) format('woff2');
+      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+    }
+
     /* Reseta estilos básicos e define a fonte */
     html,
     body {
