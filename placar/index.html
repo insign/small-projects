@@ -143,11 +143,10 @@
         width: 100vh;
         height: 100vw;
         overflow: hidden;
-        position: absolute;
-        top: 0; /* CORREÇÃO: Posição base para a transformação */
+        position: fixed; /* CORREÇÃO: Usar fixed para ancorar na viewport, mais robusto em mobile */
+        top: 0;
         left: 0;
 
-        /* CORREÇÃO: Usa uma combinação explícita de rotação e translação que é mais robusta */
         transform-origin: top left;
         transform: translateY(100vh) rotate(-90deg);
       }
