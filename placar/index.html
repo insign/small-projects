@@ -307,36 +307,36 @@
 <!-- SCRIPT ISOLADO E GLOBAL PARA TELA CHEIA -->
 <script>
   function handleFullscreenRequest() {
-    const docEl = document.documentElement;
+    const docEl = document.documentElement
     if (docEl.requestFullscreen) {
-      docEl.requestFullscreen();
+      docEl.requestFullscreen()
     } else if (docEl.webkitRequestFullscreen) {
-      docEl.webkitRequestFullscreen();
+      docEl.webkitRequestFullscreen()
     }
   }
 
   function updateFullscreenUI() {
-    const overlay = document.getElementById('fullscreen-overlay');
-    if (!overlay) return;
+    const overlay = document.getElementById('fullscreen-overlay')
+    if (!overlay) return
 
     if (document.fullscreenElement || document.webkitFullscreenElement) {
-      overlay.classList.add('hidden');
+      overlay.classList.add('hidden')
     } else {
-      overlay.classList.remove('hidden');
+      overlay.classList.remove('hidden')
     }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    const overlay = document.getElementById('fullscreen-overlay');
-    const docEl = document.documentElement;
+    const overlay = document.getElementById('fullscreen-overlay')
+    const docEl = document.documentElement
     if (!docEl.requestFullscreen && !docEl.webkitRequestFullscreen) {
-      if (overlay) overlay.remove();
+      if (overlay) overlay.remove()
     } else {
-      document.addEventListener('fullscreenchange', updateFullscreenUI);
-      document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
-      updateFullscreenUI();
+      document.addEventListener('fullscreenchange', updateFullscreenUI)
+      document.addEventListener('webkitfullscreenchange', updateFullscreenUI)
+      updateFullscreenUI()
     }
-  });
+  })
 </script>
 
 
@@ -356,7 +356,7 @@
         @contextmenu.prevent
       >
         <div class="team-name" @click.stop="swapTeamNames">{{ teamAName }}</div>
-        <div class="score" :class="{ 'score-reduced': scoreA > 9 && scoreB > 9 }">{{ scoreA }}</div>
+        <div class="score" :class="{ 'score-reduced': scoreA > 9 || scoreB > 9 }">{{ scoreA }}</div>
       </div>
       <div
         class="team team-b"
@@ -367,15 +367,15 @@
         @contextmenu.prevent
       >
         <div class="team-name" @click.stop="swapTeamNames">{{ teamBName }}</div>
-        <div class="score" :class="{ 'score-reduced': scoreA > 9 && scoreB > 9 }">{{ scoreB }}</div>
+        <div class="score" :class="{ 'score-reduced': scoreA > 9 || scoreB > 9 }">{{ scoreB }}</div>
       </div>
     </div>
 
-    <div class="controls">
+    <div class="controls" v-if="scoreA > 0 || scoreB > 0 || timerTotalSeconds > 0">
       <button
         @click.stop="resetGame"
         class="reset-button"
-        title="Zerar Placar e Pausar Cronômetro"
+        title="Zerar Placar e Cronômetro"
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
           <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
@@ -434,6 +434,7 @@
       resetGame() {
         this.scoreA = 0
         this.scoreB = 0
+        this.timerTotalSeconds = 0
         this.pauseTimer()
       },
       startTimer() {
