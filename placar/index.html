@@ -136,35 +136,33 @@
       height: 100%;
     }
 
-    /* Força a orientação paisagem apenas em dispositivos de toque (celulares/tablets).
-    */
-    @media (orientation: portrait) and (hover: none) and (pointer: coarse) {
-      #rotation-wrapper {
-        width: 100vh;
-        height: 100vw;
-        overflow: hidden;
-        position: fixed; /* CORREÇÃO: Usar fixed para ancorar na viewport, mais robusto em mobile */
-        top: 0;
-        left: 0;
+    /* As regras de rotação foram movidas para classes controladas por JS */
+    /* para um controle mais robusto no Chrome Mobile */
 
-        transform-origin: top left;
-        transform: translateY(100vh) rotate(-90deg);
-      }
-      .score {
-        font-size: 120vw !important;
-      }
+    /* Classe adicionada via JS para forçar a rotação */
+    #rotation-wrapper.force-landscape {
+      width: 100vh;
+      height: 100vw;
+      overflow: hidden;
+      position: fixed;
+      top: 0;
+      left: 0;
+      transform-origin: top left;
+      transform: translateY(100vh) rotate(-90deg);
+    }
 
-      .score.score-reduced {
-        font-size: 90vw !important;
-      }
-
-      .timer-display {
-        font-size: 4vw !important;
-      }
-
-      .timer-container.timer-paused .timer-display {
-        font-size: 8vw !important; /* Dobro da fonte quando pausado */
-      }
+    /* Ajustes de fonte quando a rotação forçada está ativa */
+    .force-landscape .score {
+      font-size: 120vw !important;
+    }
+    .force-landscape .score.score-reduced {
+      font-size: 90vw !important;
+    }
+    .force-landscape .timer-display {
+      font-size: 4vw !important;
+    }
+    .force-landscape .timer-container.timer-paused .timer-display {
+      font-size: 8vw !important;
     }
 
     #app {
@@ -375,7 +373,7 @@
         scoreA: 0,
         scoreB: 0,
         teamAName: 'PORTA',
-        teamBName: 'Fundo',
+        teamBName: 'FUNDO',
         timerTotalSeconds: 0,
         timerIsRunning: false,
         timerId: null,
@@ -383,6 +381,7 @@
         longPressTimer: null,
         isLongPress: false,
         longPressDuration: 500,
+        orientationMediaQuery: null,
       }
     },
     computed: {
@@ -393,6 +392,19 @@
       },
     },
     methods: {
+      applyRotationFix() {
+        const isChromeMobile = /Chrome/.test(navigator.userAgent) && /Mobi/.test(navigator.userAgent)
+        const isPortrait = this.orientationMediaQuery.matches
+        const wrapper = document.getElementById('rotation-wrapper')
+
+        if (wrapper) {
+          if (isChromeMobile && isPortrait) {
+            wrapper.classList.add('force-landscape')
+          } else {
+            wrapper.classList.remove('force-landscape')
+          }
+        }
+      },
       swapTeamNames() {
         const tempName = this.teamAName
         this.teamAName = this.teamBName
@@ -472,10 +484,18 @@
     },
     mounted() {
       document.addEventListener("visibilitychange", this.handleVisibilityChange)
+
+      // Lógica de rotação forçada
+      this.orientationMediaQuery = window.matchMedia("(orientation: portrait)")
+      this.orientationMediaQuery.addEventListener('change', this.applyRotationFix)
+      this.applyRotationFix() // Aplica na inicialização
     },
     beforeUnmount() {
       this.pauseTimer()
       document.removeEventListener("visibilitychange", this.handleVisibilityChange)
+      if (this.orientationMediaQuery) {
+        this.orientationMediaQuery.removeEventListener('change', this.applyRotationFix)
+      }
     },
   }).mount("#app")
 </script>
