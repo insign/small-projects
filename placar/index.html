@@ -493,6 +493,11 @@
         scoreB: 0,
         teamAName: 'PORTA',
         teamBName: 'FUNDO',
+        // --- LÓGICA DO CRONÔMETRO ---
+        // O cronômetro é manipulado indiretamente por ações do jogo.
+        // Ele não tem controles diretos de play/pause. A manipulação ocorre:
+        // 1. Ao marcar o primeiro ponto: o cronômetro inicia com 30 segundos.
+        // 2. Ao clicar em Reset: o cronômetro é pausado.
         timerTotalSeconds: 0,
         timerIsRunning: false,
         timerId: null,
@@ -501,7 +506,7 @@
         isLongPress: false,
         longPressDuration: 500,
         orientationMediaQuery: null,
-        isHelpVisible: false, // Adicionado para controlar o modal de ajuda
+        isHelpVisible: false, // Controla o modal de ajuda
       }
     },
     computed: {
@@ -512,7 +517,6 @@
       },
     },
     methods: {
-      // Método adicionado para mostrar/esconder o modal de ajuda
       toggleHelp() {
         this.isHelpVisible = !this.isHelpVisible;
       },
@@ -537,6 +541,10 @@
       resetGame() {
         this.scoreA = 0
         this.scoreB = 0
+        // Pausa o cronômetro ao clicar em Reset.
+        // O valor de `timerTotalSeconds` não é zerado de propósito,
+        // permitindo que os jogadores vejam o tempo final da partida
+        // antes de iniciar a próxima.
         this.pauseTimer()
       },
       startTimer() {
@@ -580,7 +588,11 @@
         if (team === "A") this.scoreA++
         else this.scoreB++
 
+        // Se este foi o primeiro ponto da partida (placar saindo de 0x0),
+        // o cronômetro reinicia a contagem.
         if (wasGameAtZero) {
+          // Começa com 30 segundos, pois é o tempo médio decorrido
+          // para realizar o primeiro ponto.
           this.timerTotalSeconds = 30
           this.startTimer()
         }
