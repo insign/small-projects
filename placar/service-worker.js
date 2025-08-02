@@ -1,5 +1,5 @@
 // Define um nome e versão para o cache. Mude a versão para forçar a atualização do cache.
-const CACHE_NAME = 'placar-interativo-v2'; // Versão incrementada para forçar atualização do cache
+const CACHE_NAME = 'placar-interativo-v3'; // Versão incrementada para forçar atualização do cache
 
 // Lista de todos os arquivos que a aplicação precisa para funcionar offline.
 const URLS_TO_CACHE = [
