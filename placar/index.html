@@ -15,11 +15,14 @@
   <meta name="apple-mobile-web-app-title" content="Placar">
   <meta name="theme-color" content="#111111">
 
+  <!-- O Favicon original é mantido, conforme a diretriz de integridade. -->
   <link rel="icon" href="favicon.png" type="image/svg+xml">
   <link rel="apple-touch-icon" href="favicon.png" type="image/svg+xml">
 
+  <!-- A referência ao JS local do Vue é mantida. -->
   <script src="vue3518.js"></script>
   <style>
+    /* As fontes locais referenciadas no código original são mantidas. */
     /* cyrillic-ext */
     @font-face {
       font-family: 'Roboto Mono';
@@ -297,7 +300,6 @@
       height: 28px;
     }
 
-    /* Estilos adicionados para o botão e modal de ajuda, conforme solicitado */
     .help-container {
       position: absolute;
       bottom: 20px;
@@ -378,7 +380,8 @@
 <body>
 
 <div id="fullscreen-overlay" class="hidden">
-  <button id="fullscreen-button" onclick="handleFullscreenRequest()">Entrar em Tela Cheia</button>
+  <!-- O texto deste botão será atualizado pelo Vue após detectar o idioma -->
+  <button id="fullscreen-button" onclick="handleFullscreenRequest()">Enter Fullscreen</button>
 </div>
 
 <!-- SCRIPT ISOLADO E GLOBAL PARA TELA CHEIA -->
@@ -433,7 +436,7 @@
         @touchend="pressEnd('A')"
         @contextmenu.prevent
       >
-        <div class="team-name" @click.stop="swapTeamNames">{{ teamAName }}</div>
+        <div class="team-name" @click.stop="swapTeamNames">{{ currentTeamAName }}</div>
         <div class="score" :class="{ 'score-reduced': scoreA > 9 || scoreB > 9 }">{{ scoreA }}</div>
       </div>
       <div
@@ -444,7 +447,7 @@
         @touchend="pressEnd('B')"
         @contextmenu.prevent
       >
-        <div class="team-name" @click.stop="swapTeamNames">{{ teamBName }}</div>
+        <div class="team-name" @click.stop="swapTeamNames">{{ currentTeamBName }}</div>
         <div class="score" :class="{ 'score-reduced': scoreA > 9 || scoreB > 9 }">{{ scoreB }}</div>
       </div>
     </div>
@@ -454,7 +457,7 @@
       <button
         @click.stop="resetGame"
         class="reset-button"
-        title="Zerar Placar e Pausar Cronômetro"
+        :title="texts.reset_title"
         v-show="timerIsRunning"
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
@@ -463,19 +466,19 @@
       </button>
     </div>
 
-    <!-- Botão de Ajuda adicionado conforme solicitado -->
+    <!-- Botão de Ajuda -->
     <div class="help-container">
-      <button @click.stop="toggleHelp" class="help-button" title="Ajuda">?</button>
+      <button @click.stop="toggleHelp" class="help-button" :title="texts.help_title">?</button>
     </div>
 
-    <!-- Modal de Ajuda adicionado conforme solicitado -->
+    <!-- Modal de Ajuda com textos dinâmicos -->
     <div class="help-modal" v-if="isHelpVisible" @click="toggleHelp">
       <div class="help-content" @click.stop>
         <ul>
-          <li>Clique para aumentar</li>
-          <li>Clique e segure para diminuir</li>
-          <li>Toque no cronômetro para inverter os times</li>
-          <li>Criado por <a href="https://helio.me" target="_blank">Hélio</a></li>
+          <li>{{ texts.help_increase }}</li>
+          <li>{{ texts.help_decrease }}</li>
+          <li>{{ texts.help_swap }}</li>
+          <li v-html="texts.help_creator"></li>
         </ul>
       </div>
     </div>
@@ -491,13 +494,8 @@
       return {
         scoreA: 0,
         scoreB: 0,
-        teamAName: 'PORTA',
-        teamBName: 'FUNDO',
-        // --- LÓGICA DO CRONÔMETRO ---
-        // O cronômetro é manipulado indiretamente por ações do jogo.
-        // Ele não tem controles diretos de play/pause. A manipulação ocorre:
-        // 1. Ao marcar o primeiro ponto: o cronômetro inicia com 30 segundos.
-        // 2. Ao clicar em Reset: o cronômetro é pausado.
+        isTeamOrderSwapped: false,
+        texts: {},
         timerTotalSeconds: 0,
         timerIsRunning: false,
         timerId: null,
@@ -506,10 +504,18 @@
         isLongPress: false,
         longPressDuration: 500,
         orientationMediaQuery: null,
-        isHelpVisible: false, // Controla o modal de ajuda
+        isHelpVisible: false,
       }
     },
     computed: {
+      currentTeamAName() {
+        if (!this.texts.team_a_name) return ''
+        return this.isTeamOrderSwapped ? this.texts.team_b_name : this.texts.team_a_name
+      },
+      currentTeamBName() {
+        if (!this.texts.team_b_name) return ''
+        return this.isTeamOrderSwapped ? this.texts.team_a_name : this.texts.team_b_name
+      },
       formattedTime() {
         const minutes = Math.floor(this.timerTotalSeconds / 60)
         const seconds = this.timerTotalSeconds % 60
@@ -517,8 +523,93 @@
       },
     },
     methods: {
+      initializeI18n() {
+        const defaultTexts = {
+          // Os nomes agora refletem o contexto de 'porta' e 'fundo'.
+          team_a_name: 'DOOR',
+          team_b_name: 'BACK',
+          reset_title: 'Reset Scores & Pause Timer',
+          help_title: 'Help',
+          help_increase: 'Click to increase score',
+          help_decrease: 'Click and hold to decrease',
+          help_swap: 'Tap the timer to swap teams',
+          help_creator: 'Created by <a href="https://helio.me" target="_blank">Hélio</a>',
+          fullscreen_button_text: 'Enter Fullscreen'
+        }
+
+        const translations = {
+          // 1. Chinês Mandarim: Usando 'Perto' e 'Longe' para contexto posicional.
+          zh: {
+            team_a_name: '近', team_b_name: '远', reset_title: '重置比分并暂停计时器', help_title: '帮助',
+            help_increase: '点击增加分数', help_decrease: '长按减少分数', help_swap: '点击计时器交换队伍',
+            help_creator: '由 <a href="https://helio.me" target="_blank">Hélio</a> 创建', fullscreen_button_text: '进入全屏'
+          },
+          // 2. Espanhol: Tradução literal de 'Porta' e 'Fundo'.
+          es: {
+            team_a_name: 'PUERTA', team_b_name: 'FONDO', reset_title: 'Reiniciar Puntos y Pausar Cronómetro', help_title: 'Ayuda',
+            help_increase: 'Clic para aumentar', help_decrease: 'Mantén presionado para disminuir', help_swap: 'Toca el cronómetro para cambiar equipos',
+            help_creator: 'Creado por <a href="https://helio.me" target="_blank">Hélio</a>', fullscreen_button_text: 'Pantalla Completa'
+          },
+          // 3. Hindi: Usando 'Perto' e 'Longe'.
+          hi: {
+            team_a_name: 'पास', team_b_name: 'दूर', reset_title: 'स्कोर रीसेट करें और टाइमर रोकें', help_title: 'मदद',
+            help_increase: 'स्कोर बढ़ाने के लिए क्लिक करें', help_decrease: 'घटाने के लिए दबाकर रखें', help_swap: 'टीमें बदलने के लिए टाइमर पर टैप करें',
+            help_creator: '<a href="https://helio.me" target="_blank">Hélio</a> द्वारा बनाया गया', fullscreen_button_text: 'फ़ुलस्क्रीन करें'
+          },
+          // 4. Árabe: Usando 'Perto' e 'Longe'.
+          ar: {
+            team_a_name: 'قريب', team_b_name: 'بعيد', reset_title: 'إعادة تعيين النقاط وإيقاف المؤقت', help_title: 'مساعدة',
+            help_increase: 'انقر لزيادة النتيجة', help_decrease: 'اضغط مع الاستمرار للتقليل', help_swap: 'اضغط على المؤقت لتبديل الفرق',
+            help_creator: 'صنعه <a href="https://helio.me" target="_blank">Hélio</a>', fullscreen_button_text: 'دخول وضع ملء الشاشة'
+          },
+          // 5. Bengali: Usando 'Perto' e 'Longe'.
+          bn: {
+            team_a_name: 'কাছে', team_b_name: 'দূরে', reset_title: 'স্কোর রিসেট করুন এবং টাইমার থামান', help_title: 'সাহায্য',
+            help_increase: 'স্কোর বাড়াতে ক্লিক করুন', help_decrease: 'কমাতে চেপে ধরুন', help_swap: 'দল বদল করতে টাইমার ট্যাপ করুন',
+            help_creator: '<a href="https://helio.me" target="_blank">Hélio</a> দ্বারা নির্মিত', fullscreen_button_text: 'পূর্ণ স্ক্রীন'
+          },
+          // 6. Português: Usando os termos originais e corretos 'Porta' e 'Fundo'.
+          pt: {
+            team_a_name: 'PORTA', team_b_name: 'FUNDO', reset_title: 'Zerar Placar e Pausar Cronômetro', help_title: 'Ajuda',
+            help_increase: 'Clique para aumentar', help_decrease: 'Clique e segure para diminuir', help_swap: 'Toque no cronômetro para inverter os times',
+            help_creator: 'Criado por <a href="https://helio.me" target="_blank">Hélio</a>', fullscreen_button_text: 'Entrar em Tela Cheia'
+          },
+          // 7. Russo: Usando 'Time Próximo' e 'Time Distante'.
+          ru: {
+            team_a_name: 'БЛИЖНИЙ', team_b_name: 'ДАЛЬНИЙ', reset_title: 'Сбросить счет и остановить таймер', help_title: 'Помощь',
+            help_increase: 'Нажмите, чтобы увеличить счет', help_decrease: 'Нажмите и удерживайте, чтобы уменьшить', help_swap: 'Нажмите на таймер, чтобы поменять команды',
+            help_creator: 'Создано <a href="https://helio.me" target="_blank">Hélio</a>', fullscreen_button_text: 'Во весь экран'
+          },
+          // 8. Urdu: Usando 'Perto' e 'Longe'.
+          ur: {
+            team_a_name: 'قریب', team_b_name: 'دور', reset_title: 'سکور دوبارہ ترتیب دیں اور ٹائمر روکیں', help_title: 'مدد',
+            help_increase: 'سکور بڑھانے کے لیے کلک کریں', help_decrease: 'کم کرنے کے لیے دبا کر رکھیں', help_swap: 'ٹیمیں تبدیل کرنے کے لیے ٹائمر پر ٹیپ کریں',
+            help_creator: '<a href="https://helio.me" target="_blank">Hélio</a> نے بنایا', fullscreen_button_text: 'پوری اسکرین'
+          },
+          // 9. Indonésio: Tradução literal de 'Porta' e 'Trás'.
+          id: {
+            team_a_name: 'PINTU', team_b_name: 'BELAKANG', reset_title: 'Atur Ulang Skor & Jeda Timer', help_title: 'Bantuan',
+            help_increase: 'Klik untuk menambah skor', help_decrease: 'Klik dan tahan untuk mengurangi', help_swap: 'Ketuk timer untuk menukar tim',
+            help_creator: 'Dibuat oleh <a href="https://helio.me" target="_blank">Hélio</a>', fullscreen_button_text: 'Masuk Layar Penuh'
+          },
+          // 10. Francês: Tradução literal de 'Porta' e 'Fundo'.
+          fr: {
+            team_a_name: 'PORTE', team_b_name: 'FOND', reset_title: 'Réinitialiser les scores et pauser le chrono', help_title: 'Aide',
+            help_increase: 'Cliquer pour augmenter', help_decrease: 'Maintenir pour diminuer', help_swap: 'Appuyez sur le chrono pour changer d\'équipe',
+            help_creator: 'Créé par <a href="https://helio.me" target="_blank">Hélio</a>', fullscreen_button_text: 'Plein écran'
+          }
+        }
+
+        const lang = (navigator.language || navigator.userLanguage).split('-')[0]
+        this.texts = translations[lang] || defaultTexts
+
+        const fullscreenBtn = document.getElementById('fullscreen-button')
+        if (fullscreenBtn) {
+          fullscreenBtn.textContent = this.texts.fullscreen_button_text
+        }
+      },
       toggleHelp() {
-        this.isHelpVisible = !this.isHelpVisible;
+        this.isHelpVisible = !this.isHelpVisible
       },
       applyChromeRotationFix() {
         const isChromeMobile = /Chrome/.test(navigator.userAgent) && /Mobi/.test(navigator.userAgent)
@@ -534,17 +625,11 @@
         }
       },
       swapTeamNames() {
-        const tempName = this.teamAName
-        this.teamAName = this.teamBName
-        this.teamBName = tempName
+        this.isTeamOrderSwapped = !this.isTeamOrderSwapped
       },
       resetGame() {
         this.scoreA = 0
         this.scoreB = 0
-        // Pausa o cronômetro ao clicar em Reset.
-        // O valor de `timerTotalSeconds` não é zerado de propósito,
-        // permitindo que os jogadores vejam o tempo final da partida
-        // antes de iniciar a próxima.
         this.pauseTimer()
       },
       startTimer() {
@@ -562,13 +647,10 @@
         if ("wakeLock" in navigator) {
           try {
             this.wakeLock = await navigator.wakeLock.request("screen")
-            this.wakeLock.addEventListener("release", () => { console.log("Wake Lock foi liberado pelo sistema.") })
-            console.log("Wake Lock está ativo.")
+            this.wakeLock.addEventListener("release", () => {})
           } catch (err) {
-            console.error(`Não foi possível ativar o Wake Lock: ${err.name}, ${err.message}`)
+            console.error(`Wake Lock error: ${err.name}, ${err.message}`)
           }
-        } else {
-          console.log("API Wake Lock não é suportada neste navegador.")
         }
       },
       async releaseWakeLock() {
@@ -576,9 +658,8 @@
           try {
             await this.wakeLock.release()
             this.wakeLock = null
-            console.log("Wake Lock foi liberado.")
           } catch (err) {
-            console.error(`Falha ao liberar o Wake Lock: ${err.name}, ${err.message}`)
+            console.error(`Wake Lock release error: ${err.name}, ${err.message}`)
           }
         }
       },
@@ -588,11 +669,7 @@
         if (team === "A") this.scoreA++
         else this.scoreB++
 
-        // Se este foi o primeiro ponto da partida (placar saindo de 0x0),
-        // o cronômetro reinicia a contagem.
         if (wasGameAtZero) {
-          // Começa com 30 segundos, pois é o tempo médio decorrido
-          // para realizar o primeiro ponto.
           this.timerTotalSeconds = 30
           this.startTimer()
         }
@@ -619,8 +696,8 @@
       },
     },
     mounted() {
+      this.initializeI18n()
       document.addEventListener("visibilitychange", this.handleVisibilityChange)
-
       this.orientationMediaQuery = window.matchMedia("(orientation: portrait)")
       this.orientationMediaQuery.addEventListener('change', this.applyChromeRotationFix)
       this.applyChromeRotationFix()
