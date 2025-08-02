@@ -133,7 +133,7 @@ body {
     font-size: 120vw !important;
   }
   .score.score-reduced {
-    font-size: 90vw !important;
+    font-size: 70vw !important;
   }
   .timer-display {
     font-size: 4vw !important;
@@ -159,7 +159,7 @@ body {
   font-size: 120vw !important;
 }
 .force-landscape-chrome .score.score-reduced {
-  font-size: 90vw !important;
+  font-size: 70vw !important;
 }
 .force-landscape-chrome .timer-display {
   font-size: 4vw !important;
@@ -217,7 +217,7 @@ body {
 }
 
 .score.score-reduced {
-  font-size: 90vh;
+  font-size: 70vh;
 }
 
 .timer-container {
