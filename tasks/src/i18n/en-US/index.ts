@@ -31,6 +31,12 @@ export default {
     light: 'Light',
     auto: 'Auto',
     dark: 'Dark',
+    screensaverTimeout: 'Screensaver Timeout',
+    screensaverDuration: 'Screensaver Duration',
+    disabled: 'Disabled',
+    minutesUnit: '{count} min',
+    secondsUnit: '{count}s',
+    untilInteraction: 'Until Interaction',
     taskTypes: {
       daily: 'Daily',
       once: 'Once',
@@ -39,6 +45,7 @@ export default {
   },
   hints: {
     syncId: 'This ID is used to sync your data across devices.',
+    screensaverTimeout: 'Activate after a period of inactivity to prevent screen burn-in.',
   },
   validation: {
     syncIdRequired: 'Sync ID is required',

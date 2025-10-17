@@ -12,6 +12,8 @@ export const useSettingsStore = defineStore('settings', () => {
   const fontSize = ref<number>(1) // default 1rem
   const language = ref<MessageLanguages>('pt-BR')
   const darkMode = ref<'light' | 'auto' | 'dark'>('auto')
+  const screensaverTimeout = ref<number>(0) // 0 means disabled
+  const screensaverDuration = ref<number>(60) // in seconds, 0 for 'until interaction'
   const version = ref(0)
 
   const getSettingsKey = () => (syncId.value ? `${syncId.value}${SETTINGS_KEY_SUFFIX}` : null)
@@ -26,6 +28,8 @@ export const useSettingsStore = defineStore('settings', () => {
       fontSize: fontSize.value,
       language: language.value,
       darkMode: darkMode.value,
+      screensaverTimeout: screensaverTimeout.value,
+      screensaverDuration: screensaverDuration.value,
     }
     LocalStorage.set(key, settings)
 
@@ -43,10 +47,14 @@ export const useSettingsStore = defineStore('settings', () => {
       fontSize.value = storedSettings?.fontSize || 1
       language.value = (storedSettings?.language as MessageLanguages) || 'pt-BR'
       darkMode.value = storedSettings?.darkMode || 'auto'
+      screensaverTimeout.value = storedSettings?.screensaverTimeout || 0
+      screensaverDuration.value = storedSettings?.screensaverDuration ?? 60
     } else {
       fontSize.value = 1
       language.value = 'pt-BR'
       darkMode.value = 'auto'
+      screensaverTimeout.value = 0
+      screensaverDuration.value = 60
     }
     loadVersion()
   }
@@ -92,6 +100,54 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }
 
+  function setScreensaverTimeout(minutes: number) {
+    if (minutes !== screensaverTimeout.value) {
+      screensaverTimeout.value = minutes
+      saveSettings(true)
+    }
+  }
+
+  function setScreensaverDuration(seconds: number) {
+    if (seconds !== screensaverDuration.value) {
+      screensaverDuration.value = seconds
+      saveSettings(true)
+    }
+  }
+
+  function setAllSettingsFromRemote(newSettings: Partial<Settings>) {
+    let changed = false
+    if (newSettings.fontSize !== undefined && newSettings.fontSize !== fontSize.value) {
+      fontSize.value = newSettings.fontSize
+      changed = true
+    }
+    if (newSettings.language !== undefined && newSettings.language !== language.value) {
+      language.value = newSettings.language as MessageLanguages
+      changed = true
+    }
+    if (newSettings.darkMode !== undefined && newSettings.darkMode !== darkMode.value) {
+      darkMode.value = newSettings.darkMode
+      changed = true
+    }
+    if (
+      newSettings.screensaverTimeout !== undefined &&
+      newSettings.screensaverTimeout !== screensaverTimeout.value
+    ) {
+      screensaverTimeout.value = newSettings.screensaverTimeout
+      changed = true
+    }
+    if (
+      newSettings.screensaverDuration !== undefined &&
+      newSettings.screensaverDuration !== screensaverDuration.value
+    ) {
+      screensaverDuration.value = newSettings.screensaverDuration
+      changed = true
+    }
+
+    if (changed) {
+      saveSettings(false) // Save all changes at once, don't increment version
+    }
+  }
+
   function loadVersion() {
     const key = getVersionKey()
     version.value = (key ? LocalStorage.getItem<number>(key) : 0) || 0
@@ -120,6 +176,8 @@ export const useSettingsStore = defineStore('settings', () => {
     fontSize,
     language,
     darkMode,
+    screensaverTimeout,
+    screensaverDuration,
     version,
     setVersion,
     loadSettings,
@@ -128,6 +186,9 @@ export const useSettingsStore = defineStore('settings', () => {
     setFontSize,
     setLanguage,
     setDarkMode,
+    setScreensaverTimeout,
+    setScreensaverDuration,
     loadInitialId,
+    setAllSettingsFromRemote,
   }
 })

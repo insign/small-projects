@@ -9,6 +9,21 @@
         <q-input v-model="localSyncId" :label="t('labels.syncId')" :hint="t('hints.syncId')" autofocus
           :rules="[val => !!val || t('validation.syncIdRequired')]" lazy-rules />
         <q-select v-model="localLanguage" :options="langOptions" :label="t('labels.language')" emit-value map-options />
+        <q-select
+          v-model="localScreensaverTimeout"
+          :options="screensaverTimeoutOptions"
+          :label="t('labels.screensaverTimeout')"
+          :hint="t('hints.screensaverTimeout')"
+          emit-value
+          map-options
+        />
+        <q-select
+          v-model="localScreensaverDuration"
+          :options="screensaverDurationOptions"
+          :label="t('labels.screensaverDuration')"
+          emit-value
+          map-options
+        />
         <div class="text-center">
           <div class="text-caption text-grey">{{ t('labels.darkMode') }}</div>
           <q-btn-toggle v-model="localDarkMode" toggle-color="primary" :options="[
@@ -33,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useDialogPluginComponent } from 'quasar'
 import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from 'src/stores/settings'
@@ -55,11 +70,24 @@ const localSyncId = ref(settingsStore.syncId)
 const localFontSize = ref(settingsStore.fontSize)
 const localLanguage = ref(settingsStore.language)
 const localDarkMode = ref(settingsStore.darkMode)
+const localScreensaverTimeout = ref(settingsStore.screensaverTimeout)
+const localScreensaverDuration = ref(settingsStore.screensaverDuration)
 
 const langOptions = [
   { value: 'en-US', label: 'English' },
   { value: 'pt-BR', label: 'Português (Brasil)' },
 ]
+
+const screensaverTimeoutOptions = computed(() => [
+  { label: t('labels.disabled'), value: 0 },
+  ...[2, 5, 10, 20, 30, 40, 60].map(m => ({ label: t('labels.minutesUnit', { count: m }), value: m }))
+])
+
+const screensaverDurationOptions = computed(() => [
+  { label: t('labels.untilInteraction'), value: 0 },
+  ...[15, 30].map(s => ({ label: t('labels.secondsUnit', { count: s }), value: s })),
+  ...[1, 2, 5].map(m => ({ label: t('labels.minutesUnit', { count: m }), value: m * 60 }))
+])
 
 const onSaveClick = () => {
   if (localSyncId.value) {
@@ -67,6 +95,8 @@ const onSaveClick = () => {
     settingsStore.setFontSize(localFontSize.value)
     settingsStore.setLanguage(localLanguage.value)
     settingsStore.setDarkMode(localDarkMode.value)
+    settingsStore.setScreensaverTimeout(localScreensaverTimeout.value)
+    settingsStore.setScreensaverDuration(localScreensaverDuration.value)
     onDialogOK()
   }
 }

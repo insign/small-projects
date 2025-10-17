@@ -2,13 +2,12 @@
   <q-page class="q-pa-sm">
     <!-- Headers -->
     <div class="row no-wrap q-gutter-x-sm">
-      <div class="col text-weight-medium text-center" :style="headerStyle">{{ t('labels.title') }}</div>
-      <div v-for="day in days" :key="day.key" class="col-2 text-weight-medium text-center day-column"
+      <div class="col text-weight-medium text-center" :style="headerStyle">&nbsp;</div>
+      <div v-for="day in days" :key="day.key" class="col-2 text-weight-medium text-center day-column q-mb-sm"
         :style="headerStyle">
         {{ day.header }}
       </div>
     </div>
-    <q-separator class="q-mb-sm" />
 
     <!-- Unchecked Tasks -->
     <draggable v-model="uncheckedTasks" item-key="id" group="tasks" class="task-list" drag-class="drag-active"
@@ -53,7 +52,7 @@
             <q-item class="text-grey-7 q-pa-xs">
               <q-item-section :style="{ fontSize: `${settingsStore.fontSize}rem` }">{{
                 task.title
-              }}</q-item-section>
+                }}</q-item-section>
             </q-item>
           </q-slide-item>
         </div>

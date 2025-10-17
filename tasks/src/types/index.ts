@@ -15,4 +15,6 @@ export interface Settings {
   fontSize: number // in rem
   language: string
   darkMode: 'light' | 'auto' | 'dark'
+  screensaverTimeout: number // in minutes, 0 to disable
+  screensaverDuration: number // in seconds, 0 for 'until interaction'
 }

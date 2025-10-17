@@ -3,7 +3,6 @@ import { useSettingsStore } from 'src/stores/settings'
 import { useTasksStore } from 'src/stores/tasks'
 import { useApi } from './useApi'
 import type { Settings, Task } from 'src/types'
-import { type MessageLanguages } from 'src/boot/i18n'
 
 export function useSync() {
   const $q = useQuasar()
@@ -32,14 +31,7 @@ export function useSync() {
         const remoteData = await getData(settingsId)
         if (remoteData) {
           const newSettings = remoteData.json as Settings
-          settingsStore.setFontSize(newSettings.fontSize)
-          const validLanguages: MessageLanguages[] = ['en-US', 'pt-BR']
-          if (validLanguages.includes(newSettings.language as MessageLanguages)) {
-            settingsStore.setLanguage(newSettings.language as MessageLanguages)
-          }
-          if (['light', 'auto', 'dark'].includes(newSettings.darkMode)) {
-            settingsStore.setDarkMode(newSettings.darkMode)
-          }
+          settingsStore.setAllSettingsFromRemote(newSettings)
           settingsStore.setVersion(remoteData.version)
         }
       } else if (settingsStore.version > remoteSettingsVersion) {
@@ -49,6 +41,8 @@ export function useSync() {
           fontSize: settingsStore.fontSize,
           language: settingsStore.language,
           darkMode: settingsStore.darkMode,
+          screensaverTimeout: settingsStore.screensaverTimeout,
+          screensaverDuration: settingsStore.screensaverDuration,
         }
         const response = await putData(settingsId, dataToPush)
         settingsStore.setVersion(response.version)

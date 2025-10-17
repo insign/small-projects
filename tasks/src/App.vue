@@ -1,16 +1,19 @@
 <template>
   <router-view />
+  <ScreensaverOverlay :is-active="isScreensaverActive" @deactivated="onScreensaverDeactivated" />
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch } from 'vue'
+import { onMounted, onUnmounted, watch, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from 'src/stores/settings'
 import { useTasksStore } from 'src/stores/tasks'
 import { useSync } from 'src/composables/useSync'
 import { initializeDateManager, cleanupDateManager } from 'src/composables/useDateManager'
+import { useInactivityTimer } from 'src/composables/useInactivityTimer'
 import SettingsDialog from 'src/components/dialogs/SettingsDialog.vue'
+import ScreensaverOverlay from 'src/components/ScreensaverOverlay.vue'
 import { type MessageLanguages } from 'src/boot/i18n'
 
 const $q = useQuasar()
@@ -18,6 +21,21 @@ const { locale } = useI18n()
 const settingsStore = useSettingsStore()
 const tasksStore = useTasksStore()
 const { startSyncInterval, stopSyncInterval } = useSync()
+const { isInactive, resetTimer } = useInactivityTimer()
+
+const isScreensaverActive = ref(false)
+
+watch(isInactive, (inactive) => {
+  if (inactive) {
+    isScreensaverActive.value = true
+  }
+})
+
+const onScreensaverDeactivated = () => {
+  isScreensaverActive.value = false
+  resetTimer()
+}
+
 
 // Vite-specific feature to handle dynamic imports from node_modules
 const langList = import.meta.glob('../node_modules/quasar/lang/*.js')

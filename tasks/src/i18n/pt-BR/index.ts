@@ -28,6 +28,12 @@ export default {
     light: 'Claro',
     auto: 'Automático',
     dark: 'Escuro',
+    screensaverTimeout: 'Tempo para Protetor de Tela',
+    screensaverDuration: 'Duração do Protetor de Tela',
+    disabled: 'Desativado',
+    minutesUnit: '{count} min',
+    secondsUnit: '{count}s',
+    untilInteraction: 'Até Interagir',
     taskTypes: {
       daily: 'Diária',
       once: 'Única',
@@ -36,6 +42,7 @@ export default {
   },
   hints: {
     syncId: 'Este ID é usado para sincronizar seus dados entre dispositivos.',
+    screensaverTimeout: 'Ativar após um período de inatividade para prevenir burn-in.',
   },
   validation: {
     syncIdRequired: 'O ID de Sincronização é obrigatório',
