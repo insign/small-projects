@@ -1,0 +1,53 @@
+export default {
+  failed: 'Ação falhou',
+  success: 'Ação bem-sucedida',
+  tasksTitle: 'Tarefas',
+  buttons: {
+    save: 'Salvar',
+    close: 'Fechar',
+    cancel: 'Cancelar',
+    submit: 'Enviar',
+    goHome: 'Ir para a Home',
+    sync: 'Sincronizar',
+    addTask: 'Adicionar Tarefa',
+    recurringTasks: 'Tarefas Recorrentes',
+    settings: 'Configurações',
+    toggleFullscreen: 'Alternar Tela Cheia',
+  },
+  labels: {
+    syncId: 'ID de Sincronização',
+    language: 'Idioma',
+    fontSize: 'Tamanho da Fonte',
+    title: 'Título',
+    type: 'Tipo',
+    daysOfWeek: 'Selecione os dias da semana',
+    taskActions: 'Ações da Tarefa',
+    noSpecificDays: 'Nenhum dia específico',
+    everyDay: 'Todos os dias',
+    taskTypes: {
+      daily: 'Diária',
+      once: 'Única',
+      weekly: 'Semanal',
+    },
+  },
+  hints: {
+    syncId: 'Este ID é usado para sincronizar seus dados entre dispositivos.',
+  },
+  validation: {
+    syncIdRequired: 'O ID de Sincronização é obrigatório',
+    titleRequired: 'O título é obrigatório',
+  },
+  dialogs: {
+    settingsTitle: 'Configurações',
+    addTaskTitle: 'Adicionar Tarefa',
+    editTaskTitle: 'Editar Tarefa',
+    recurringTasksTitle: 'Tarefas Recorrentes',
+    confirmTitle: 'Confirmar',
+  },
+  messages: {
+    confirmDelete: 'Você tem certeza que deseja excluir "{taskTitle}"?',
+    taskDeleted: 'Tarefa excluída.',
+    noRecurringTasks: 'Nenhuma tarefa recorrente para mostrar.',
+    notFound: 'Oops. Nada por aqui...',
+  },
+}

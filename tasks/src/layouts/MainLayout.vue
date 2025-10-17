@@ -2,21 +2,24 @@
   <q-layout view="lHh Lpr lFf">
     <q-header elevated>
       <q-toolbar>
-        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
+        <q-toolbar-title> {{ t('tasksTitle') }} </q-toolbar-title>
 
-        <q-toolbar-title> Quasar App </q-toolbar-title>
-
-        <div>Quasar v{{ $q.version }}</div>
+        <q-btn flat dense round icon="sync" @click="() => sync(true)" :aria-label="t('buttons.sync')" />
+        <q-btn flat dense round icon="add" @click="() => openTaskDialog(null)" :aria-label="t('buttons.addTask')" />
+        <q-btn flat dense round icon="event_repeat" @click="openRecurringDialog" :aria-label="t('buttons.recurringTasks')">
+          <q-badge v-if="recurringTaskCount > 0" color="red" floating>{{ recurringTaskCount }}</q-badge>
+        </q-btn>
+        <q-btn flat dense round icon="settings" @click="openSettingsDialog" :aria-label="t('buttons.settings')" />
+        <q-btn
+          flat
+          dense
+          round
+          :icon="$q.fullscreen.isActive ? 'fullscreen_exit' : 'fullscreen'"
+          @click="$q.fullscreen.toggle()"
+          :aria-label="t('buttons.toggleFullscreen')"
+        />
       </q-toolbar>
     </q-header>
-
-    <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
-      <q-list>
-        <q-item-label header> Essential Links </q-item-label>
-
-        <EssentialLink v-for="link in linksList" :key="link.title" v-bind="link" />
-      </q-list>
-    </q-drawer>
 
     <q-page-container>
       <router-view />
@@ -25,57 +28,47 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import EssentialLink, { type EssentialLinkProps } from 'components/EssentialLink.vue';
+import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
+import { useSettingsStore } from 'src/stores/settings'
+import { useTasksStore } from 'src/stores/tasks'
+import { useSync } from 'src/composables/useSync'
+import SettingsDialog from 'src/components/dialogs/SettingsDialog.vue'
+import TaskDialog from 'src/components/dialogs/TaskDialog.vue'
+import RecurringDialog from 'src/components/dialogs/RecurringDialog.vue'
+import { computed } from 'vue'
+import type { Task } from 'src/types'
 
-const linksList: EssentialLinkProps[] = [
-  {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev',
-  },
-  {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework',
-  },
-  {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev',
-  },
-  {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev',
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev',
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev',
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev',
-  },
-];
+const $q = useQuasar()
+const { t } = useI18n()
+const settingsStore = useSettingsStore()
+const tasksStore = useTasksStore()
+const { sync } = useSync()
 
-const leftDrawerOpen = ref(false);
+const recurringTaskCount = computed(() => tasksStore.recurringTasks.length)
 
-function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value;
+const openSettingsDialog = () => {
+  $q.dialog({
+    component: SettingsDialog,
+  }).onOk(() => {
+    // Potentially trigger a sync or reload if syncId changed
+    if (settingsStore.syncId) {
+      tasksStore.loadTasks()
+      void sync(true)
+    }
+  })
+}
+
+const openTaskDialog = (task: Task | null) => {
+  $q.dialog({
+    component: TaskDialog,
+    componentProps: { task },
+  })
+}
+
+const openRecurringDialog = () => {
+  $q.dialog({
+    component: RecurringDialog,
+  })
 }
 </script>

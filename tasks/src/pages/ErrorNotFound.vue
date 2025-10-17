@@ -3,7 +3,7 @@
     <div>
       <div style="font-size: 30vh">404</div>
 
-      <div class="text-h2" style="opacity: 0.4">Oops. Nothing here...</div>
+      <div class="text-h2" style="opacity: 0.4">{{ t('messages.notFound') }}</div>
 
       <q-btn
         class="q-mt-xl"
@@ -11,7 +11,7 @@
         text-color="blue"
         unelevated
         to="/"
-        label="Go Home"
+        :label="t('buttons.goHome')"
         no-caps
       />
     </div>
@@ -19,5 +19,7 @@
 </template>
 
 <script setup lang="ts">
-//
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 </script>
