@@ -8,24 +8,13 @@
     <q-separator class="q-mb-sm" />
 
     <!-- Unchecked Tasks -->
-    <draggable
-      v-model="uncheckedTasks"
-      item-key="id"
-      group="tasks"
-      class="task-list"
-      handle=".handle"
-      drag-class="drag-active"
-      @end="onDragEnd"
-    >
+    <draggable v-model="uncheckedTasks" item-key="id" group="tasks" class="task-list" handle=".handle"
+      drag-class="drag-active" @end="onDragEnd">
       <template #item="{ element: task }">
         <div class="row no-wrap q-gutter-x-sm task-row">
           <div class="col">
-            <q-slide-item
-              :ref="el => setSlideItemRef(el as QSlideItem | null, task)"
-              @left="() => onLeft(task)"
-              @right="() => onRight(task)"
-              :aria-label="t('labels.taskActions')"
-            >
+            <q-slide-item :ref="el => setSlideItemRef(el as QSlideItem | null, task)" @left="() => onLeft(task)"
+              @right="() => onRight(task)" :aria-label="t('labels.taskActions')">
               <template #left><q-icon name="edit" /></template>
               <template #right><q-icon name="delete" /></template>
               <q-item>
@@ -38,12 +27,8 @@
           </div>
           <div v-for="day in days" :key="day.key" class="col-2">
             <q-item class="flex-center">
-              <q-checkbox
-                v-if="isCheckboxVisible(task, day)"
-                :model-value="!!task.checkedDates[day.dateStr]"
-                @update:model-value="val => onCheckChange(task.id, day.dateStr, val)"
-                :size="checkboxSize"
-              />
+              <q-checkbox v-if="isCheckboxVisible(task, day)" :model-value="!!task.checkedDates[day.dateStr]"
+                @update:model-value="val => onCheckChange(task.id, day.dateStr, val)" :size="checkboxSize" />
             </q-item>
           </div>
         </div>
@@ -54,12 +39,8 @@
     <div v-for="task in checkedTasks" :key="task.id" class="task-list">
       <div class="row no-wrap q-gutter-x-sm task-row">
         <div class="col">
-          <q-slide-item
-            :ref="el => setSlideItemRef(el as QSlideItem | null, task)"
-            @left="() => onLeft(task)"
-            @right="() => onRight(task)"
-            :aria-label="t('labels.taskActions')"
-          >
+          <q-slide-item :ref="el => setSlideItemRef(el as QSlideItem | null, task)" @left="() => onLeft(task)"
+            @right="() => onRight(task)" :aria-label="t('labels.taskActions')">
             <template #left><q-icon name="edit" /></template>
             <template #right><q-icon name="delete" /></template>
             <q-item class="bg-grey-3 text-grey-7">
@@ -72,12 +53,8 @@
         </div>
         <div v-for="day in days" :key="day.key" class="col-2">
           <q-item class="flex-center">
-            <q-checkbox
-              v-if="isCheckboxVisible(task, day)"
-              :model-value="!!task.checkedDates[day.dateStr]"
-              @update:model-value="val => onCheckChange(task.id, day.dateStr, val)"
-              :size="checkboxSize"
-            />
+            <q-checkbox v-if="isCheckboxVisible(task, day)" :model-value="!!task.checkedDates[day.dateStr]"
+              @update:model-value="val => onCheckChange(task.id, day.dateStr, val)" :size="checkboxSize" />
           </q-item>
         </div>
       </div>
@@ -103,7 +80,7 @@ const settingsStore = useSettingsStore()
 const { today, yesterday, tomorrow, todayStr, yesterdayStr, tomorrowStr } =
   useDateManager()
 
-const checkboxSize = computed(() => `${settingsStore.fontSize * 3.0}rem`)
+const checkboxSize = computed(() => `${settingsStore.fontSize * 3.5}rem`)
 
 const slideItemRefs = ref(new Map<string, QSlideItem>())
 const setSlideItemRef = (el: QSlideItem | null, task: Task) => {
@@ -145,7 +122,7 @@ const uncheckedTasks = computed({
 
 const checkedTasks = computed(() => visibleTasks.value
   .filter(t => t.checkedDates[todayStr.value] === true)
-    .sort((a, b) => a.order - b.order)
+  .sort((a, b) => a.order - b.order)
 )
 
 const days = computed(() => [
@@ -218,15 +195,20 @@ const onRight = (task: Task) => {
 .task-list {
   min-height: 50px;
 }
-.task-row, .task-row-title {
+
+.task-row,
+.task-row-title {
   height: 50px;
   display: flex;
   align-items: center;
 }
+
 .handle {
   cursor: move;
 }
-.drag-active {
+
+.drag-active,
+.drag-active .q-slide-item {
   background-color: #e0e0e0;
   opacity: 0.7;
 }
