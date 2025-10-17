@@ -14,4 +14,5 @@ export interface Settings {
   syncId: string | null
   fontSize: number // in rem
   language: string
+  darkMode: 'light' | 'auto' | 'dark'
 }

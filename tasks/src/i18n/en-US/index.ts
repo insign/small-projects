@@ -27,6 +27,10 @@ export default {
     taskActions: 'Task Actions',
     noSpecificDays: 'No specific days',
     everyDay: 'Every day',
+    darkMode: 'Dark Mode',
+    light: 'Light',
+    auto: 'Auto',
+    dark: 'Dark',
     taskTypes: {
       daily: 'Daily',
       once: 'Once',

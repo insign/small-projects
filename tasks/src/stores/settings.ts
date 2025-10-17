@@ -11,6 +11,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const syncId = ref<string | null>(null)
   const fontSize = ref<number>(1) // default 1rem
   const language = ref<MessageLanguages>('pt-BR')
+  const darkMode = ref<'light' | 'auto' | 'dark'>('auto')
   const version = ref(0)
 
   const getSettingsKey = () => (syncId.value ? `${syncId.value}${SETTINGS_KEY_SUFFIX}` : null)
@@ -24,6 +25,7 @@ export const useSettingsStore = defineStore('settings', () => {
       syncId: syncId.value!,
       fontSize: fontSize.value,
       language: language.value,
+      darkMode: darkMode.value,
     }
     LocalStorage.set(key, settings)
 
@@ -40,9 +42,11 @@ export const useSettingsStore = defineStore('settings', () => {
       const storedSettings = LocalStorage.getItem<Settings>(key)
       fontSize.value = storedSettings?.fontSize || 1
       language.value = (storedSettings?.language as MessageLanguages) || 'pt-BR'
+      darkMode.value = storedSettings?.darkMode || 'auto'
     } else {
       fontSize.value = 1
       language.value = 'pt-BR'
+      darkMode.value = 'auto'
     }
     loadVersion()
   }
@@ -81,6 +85,13 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }
 
+  function setDarkMode(mode: 'light' | 'auto' | 'dark') {
+    if (mode !== darkMode.value) {
+      darkMode.value = mode
+      saveSettings(true)
+    }
+  }
+
   function loadVersion() {
     const key = getVersionKey()
     version.value = (key ? LocalStorage.getItem<number>(key) : 0) || 0
@@ -108,6 +119,7 @@ export const useSettingsStore = defineStore('settings', () => {
     syncId,
     fontSize,
     language,
+    darkMode,
     version,
     setVersion,
     loadSettings,
@@ -115,6 +127,7 @@ export const useSettingsStore = defineStore('settings', () => {
     setSyncId,
     setFontSize,
     setLanguage,
+    setDarkMode,
     loadInitialId,
   }
 })

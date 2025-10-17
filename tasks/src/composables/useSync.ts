@@ -37,6 +37,9 @@ export function useSync() {
           if (validLanguages.includes(newSettings.language as MessageLanguages)) {
             settingsStore.setLanguage(newSettings.language as MessageLanguages)
           }
+          if (['light', 'auto', 'dark'].includes(newSettings.darkMode)) {
+            settingsStore.setDarkMode(newSettings.darkMode)
+          }
           settingsStore.setVersion(remoteData.version)
         }
       } else if (settingsStore.version > remoteSettingsVersion) {
@@ -45,6 +48,7 @@ export function useSync() {
           syncId: settingsStore.syncId,
           fontSize: settingsStore.fontSize,
           language: settingsStore.language,
+          darkMode: settingsStore.darkMode,
         }
         const response = await putData(settingsId, dataToPush)
         settingsStore.setVersion(response.version)

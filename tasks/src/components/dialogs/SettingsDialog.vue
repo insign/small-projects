@@ -6,31 +6,20 @@
       </q-card-section>
 
       <q-card-section class="q-pt-none q-gutter-md">
-        <q-input
-          v-model="localSyncId"
-          :label="t('labels.syncId')"
-          :hint="t('hints.syncId')"
-          autofocus
-          :rules="[val => !!val || t('validation.syncIdRequired')]"
-          lazy-rules
-        />
-        <q-select
-          v-model="localLanguage"
-          :options="langOptions"
-          :label="t('labels.language')"
-          emit-value
-          map-options
-        />
+        <q-input v-model="localSyncId" :label="t('labels.syncId')" :hint="t('hints.syncId')" autofocus
+          :rules="[val => !!val || t('validation.syncIdRequired')]" lazy-rules />
+        <q-select v-model="localLanguage" :options="langOptions" :label="t('labels.language')" emit-value map-options />
+        <div class="text-center">
+          <div class="text-caption text-grey">{{ t('labels.darkMode') }}</div>
+          <q-btn-toggle v-model="localDarkMode" toggle-color="primary" :options="[
+            { label: t('labels.light'), value: 'light' },
+            { label: t('labels.auto'), value: 'auto' },
+            { label: t('labels.dark'), value: 'dark' },
+          ]" />
+        </div>
         <div>
-          <q-slider
-            v-model="localFontSize"
-            label
-            :label-value="`${localFontSize}rem`"
-            :min="0.5"
-            :max="2"
-            :step="0.1"
-            class="q-mt-lg"
-          />
+          <q-slider v-model="localFontSize" label :label-value="`${localFontSize}rem`" :min="0.5" :max="2" :step="0.1"
+            class="q-mt-lg" />
           <div class="text-caption text-grey text-center q-mt-sm">{{ t('labels.fontSize') }}</div>
         </div>
       </q-card-section>
@@ -65,6 +54,7 @@ const settingsStore = useSettingsStore()
 const localSyncId = ref(settingsStore.syncId)
 const localFontSize = ref(settingsStore.fontSize)
 const localLanguage = ref(settingsStore.language)
+const localDarkMode = ref(settingsStore.darkMode)
 
 const langOptions = [
   { value: 'en-US', label: 'English' },
@@ -76,6 +66,7 @@ const onSaveClick = () => {
     settingsStore.setSyncId(localSyncId.value)
     settingsStore.setFontSize(localFontSize.value)
     settingsStore.setLanguage(localLanguage.value)
+    settingsStore.setDarkMode(localDarkMode.value)
     onDialogOK()
   }
 }

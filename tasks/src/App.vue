@@ -50,6 +50,15 @@ watch(
   { immediate: true }
 )
 
+// Watch for dark mode changes in the store and update Quasar's dark mode
+watch(
+  () => settingsStore.darkMode,
+  (mode) => {
+    $q.dark.set(mode === 'auto' ? 'auto' : mode === 'dark')
+  },
+  { immediate: true }
+)
+
 onMounted(() => {
   initializeDateManager(() => tasksStore.handleDateRollover())
 
