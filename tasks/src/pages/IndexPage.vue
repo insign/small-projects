@@ -14,13 +14,13 @@
       @end="onDragEnd" :delay="150" delay-on-touch-only>
       <template #item="{ element: task, index }">
         <div :class="{ 'task-row--even': index % 2 === 0, 'not-done-yesterday': isNotDoneYesterday(task) }">
-          <div class="row no-wrap q-gutter-x-xs task-row">
+          <div class="row no-wrap q-gutter-x-xs task-row" :style="{ height: taskRowHeight }">
             <div class="col">
               <q-slide-item :ref="(el) => setSlideItemRef(el as QSlideItem | null, task)" @left="() => onLeft(task)"
                 @right="() => onRight(task)" :aria-label="t('labels.taskActions')">
                 <template #left><q-icon name="edit" /></template>
                 <template #right><q-icon name="delete" /></template>
-                <q-item class="q-pa-xs" :style="{ height: taskItemHeight, minHeight: taskItemHeight }">
+                <q-item class="q-pa-xs">
                   <q-item-section :style="{ fontSize: `${settingsStore.fontSize}rem` }">
                     {{ task.title }}
                   </q-item-section>
@@ -53,13 +53,13 @@
     <!-- Checked Tasks (Not Draggable) -->
     <div v-for="(task, index) in checkedTasks" :key="task.id" class="task-list checked-list"
       :class="{ 'task-row--even': (uncheckedTasks.length + index) % 2 === 0, 'not-done-yesterday': isNotDoneYesterday(task) }">
-      <div class="row no-wrap q-gutter-x-xs task-row">
+      <div class="row no-wrap q-gutter-x-xs task-row" :style="{ height: taskRowHeight }">
         <div class="col">
           <q-slide-item :ref="(el) => setSlideItemRef(el as QSlideItem | null, task)" @left="() => onLeft(task)"
             @right="() => onRight(task)" :aria-label="t('labels.taskActions')">
             <template #left><q-icon name="edit" /></template>
             <template #right><q-icon name="delete" /></template>
-            <q-item class="text-grey-7 q-pa-xs" :style="{ height: taskItemHeight, minHeight: taskItemHeight }">
+            <q-item class="text-grey-7 q-pa-xs">
               <q-item-section :style="{ fontSize: `${settingsStore.fontSize}rem` }">{{
                 task.title
                 }}</q-item-section>
@@ -110,7 +110,7 @@ const checkboxSize = computed(() => `${settingsStore.fontSize * 2.8}rem`)
 const headerStyle = computed(() => ({
   fontSize: `${settingsStore.fontSize * 0.7}rem`,
 }))
-const taskItemHeight = computed(() => `${settingsStore.fontSize * 35}px`)
+const taskRowHeight = computed(() => `${settingsStore.fontSize * 30}px`)
 
 const slideItemRefs = ref(new Map<string, QSlideItem>())
 const setSlideItemRef = (el: QSlideItem | null, task: Task) => {
