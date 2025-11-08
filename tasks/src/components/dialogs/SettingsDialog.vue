@@ -39,6 +39,23 @@
             class="q-mt-lg" />
           <div class="text-caption text-grey text-center q-mt-sm">{{ t('labels.fontSize') }}</div>
         </div>
+        <div>
+          <q-slider v-model="localCheckboxSize" label :label-value="`${localCheckboxSize}px`" :min="12" :max="100" :step="2"
+            class="q-mt-lg" />
+          <div class="text-caption text-grey text-center q-mt-sm">{{ t('labels.checkboxSize') }}</div>
+        </div>
+        <div>
+          <q-slider v-model="localTaskRowHeight" label :label-value="`${localTaskRowHeight}px`" :min="20" :max="100" :step="2"
+            class="q-mt-lg" />
+          <div class="text-caption text-grey text-center q-mt-sm">{{ t('labels.taskRowHeight') }}</div>
+        </div>
+        <q-select
+          v-model="localDayHeaderFormat"
+          :options="dayHeaderFormatOptions"
+          :label="t('labels.dayHeaderFormat')"
+          emit-value
+          map-options
+        />
       </q-card-section>
 
       <q-card-actions align="right">
@@ -76,6 +93,9 @@ const localScreensaverTimeout = ref(settingsStore.screensaverTimeout)
 const localScreensaverDuration = ref(settingsStore.screensaverDuration)
 const localRequireFullscreen = ref(settingsStore.requireFullscreen)
 const localScreensaverConfetti = ref(settingsStore.screensaverConfetti)
+const localCheckboxSize = ref(settingsStore.checkboxSize)
+const localTaskRowHeight = ref(settingsStore.taskRowHeight)
+const localDayHeaderFormat = ref(settingsStore.dayHeaderFormat)
 
 const langOptions = [
   { value: 'en-US', label: 'English' },
@@ -93,6 +113,12 @@ const screensaverDurationOptions = computed(() => [
   ...[1, 2, 5].map(m => ({ label: t('labels.minutesUnit', { count: m }), value: m * 60 }))
 ])
 
+const dayHeaderFormatOptions = [
+  { label: 'Ocultar', value: 'none' },
+  { label: 'Só Dia da Semana', value: 'weekday' },
+  { label: 'Dia da Semana + Número', value: 'weekday-number' },
+]
+
 const onSaveClick = () => {
   if (localSyncId.value) {
     settingsStore.setSyncId(localSyncId.value)
@@ -103,6 +129,9 @@ const onSaveClick = () => {
     settingsStore.setScreensaverDuration(localScreensaverDuration.value)
     settingsStore.setRequireFullscreen(localRequireFullscreen.value)
     settingsStore.setScreensaverConfetti(localScreensaverConfetti.value)
+    settingsStore.setCheckboxSize(localCheckboxSize.value)
+    settingsStore.setTaskRowHeight(localTaskRowHeight.value)
+    settingsStore.setDayHeaderFormat(localDayHeaderFormat.value)
     onDialogOK()
   }
 }

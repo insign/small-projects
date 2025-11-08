@@ -10,6 +10,8 @@ export interface Task {
   createdAt: number
 }
 
+export type DayHeaderFormat = 'none' | 'weekday' | 'weekday-number'
+
 export interface Settings {
   syncId: string | null
   fontSize: number // in rem
@@ -19,4 +21,7 @@ export interface Settings {
   screensaverDuration: number // in seconds, 0 for 'until interaction'
   requireFullscreen: boolean // require fullscreen for task operations
   screensaverConfetti: boolean // enable confetti animation in screensaver
+  checkboxSize: number // in pixels
+  taskRowHeight: number // in pixels
+  dayHeaderFormat: DayHeaderFormat // format for day headers
 }

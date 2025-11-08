@@ -1,7 +1,7 @@
 <template>
   <q-page class="q-pa-sm">
     <!-- Headers -->
-    <div class="row no-wrap q-gutter-x-xs">
+    <div v-if="settingsStore.dayHeaderFormat !== 'none'" class="row no-wrap q-gutter-x-xs">
       <div class="col text-weight-medium text-center" :style="headerStyle">&nbsp;</div>
       <div v-for="day in days" :key="day.key" class="col-1 text-weight-medium text-center day-column q-mb-sm"
         :style="headerStyle">
@@ -27,7 +27,7 @@
                 </q-item>
               </q-slide-item>
             </div>
-            <div v-for="day in days" :key="day.key" class="col-1 day-column"
+            <div v-for="day in allDays" :key="day.key" class="col-1 day-column"
               :class="{ 'today-column': day.key === 'today', 'long-pressing': longPressingRow === `${task.id}-${day.dateStr}` }">
               <q-item class="flex-center">
                 <q-checkbox v-if="isCheckboxVisible(task, day)"
@@ -66,7 +66,7 @@
             </q-item>
           </q-slide-item>
         </div>
-        <div v-for="day in days" :key="day.key" class="col-1 day-column"
+        <div v-for="day in allDays" :key="day.key" class="col-1 day-column"
           :class="{ 'long-pressing': longPressingRow === `${task.id}-${day.dateStr}` }">
           <q-item class="flex-center">
             <q-checkbox v-if="isCheckboxVisible(task, day)"
@@ -106,11 +106,11 @@ const tasksStore = useTasksStore()
 const settingsStore = useSettingsStore()
 const { today, yesterday, tomorrow, todayStr, yesterdayStr, tomorrowStr } = useDateManager()
 
-const checkboxSize = computed(() => `${settingsStore.fontSize * 2.8}rem`)
+const checkboxSize = computed(() => `${settingsStore.checkboxSize}px`)
 const headerStyle = computed(() => ({
   fontSize: `${settingsStore.fontSize * 0.7}rem`,
 }))
-const taskRowHeight = computed(() => `${settingsStore.fontSize * 30}px`)
+const taskRowHeight = computed(() => `${settingsStore.taskRowHeight}px`)
 
 const slideItemRefs = ref(new Map<string, QSlideItem>())
 const setSlideItemRef = (el: QSlideItem | null, task: Task) => {
@@ -173,11 +173,23 @@ const checkedTasks = computed(() =>
     .sort((a, b) => a.order - b.order)
 )
 
-const days = computed(() => [
-  { key: 'yesterday', header: qDate.formatDate(yesterday.value, 'ddd/DD'), dateStr: yesterdayStr.value },
-  { key: 'today', header: qDate.formatDate(today.value, 'ddd/DD'), dateStr: todayStr.value },
-  { key: 'tomorrow', header: qDate.formatDate(tomorrow.value, 'ddd/DD'), dateStr: tomorrowStr.value },
+const allDays = computed(() => [
+  { key: 'yesterday', dateStr: yesterdayStr.value },
+  { key: 'today', dateStr: todayStr.value },
+  { key: 'tomorrow', dateStr: tomorrowStr.value },
 ])
+
+const days = computed(() => {
+  const format = settingsStore.dayHeaderFormat
+  if (format === 'none') return []
+  const formatStr = format === 'weekday' ? 'ddd' : 'ddd/DD'
+  return allDays.value.map(d => ({
+    ...d,
+    header: d.key === 'yesterday' ? qDate.formatDate(yesterday.value, formatStr) :
+            d.key === 'today' ? qDate.formatDate(today.value, formatStr) :
+            qDate.formatDate(tomorrow.value, formatStr)
+  }))
+})
 
 const isCheckboxVisible = (task: Task, day: { key: string; dateStr: string }): boolean => {
   if (task.type === 'once') {

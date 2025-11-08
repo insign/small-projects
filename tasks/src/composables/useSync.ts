@@ -45,6 +45,9 @@ export function useSync() {
           screensaverDuration: settingsStore.screensaverDuration,
           requireFullscreen: settingsStore.requireFullscreen,
           screensaverConfetti: settingsStore.screensaverConfetti,
+          checkboxSize: settingsStore.checkboxSize,
+          taskRowHeight: settingsStore.taskRowHeight,
+          dayHeaderFormat: settingsStore.dayHeaderFormat,
         }
         const response = await putData(settingsId, dataToPush)
         settingsStore.setVersion(response.version)
