@@ -12,6 +12,7 @@ import { useTasksStore } from 'src/stores/tasks'
 import { useSync } from 'src/composables/useSync'
 import { initializeDateManager, cleanupDateManager } from 'src/composables/useDateManager'
 import { useInactivityTimer } from 'src/composables/useInactivityTimer'
+import { useAutoUpdate } from 'src/composables/useAutoUpdate'
 import SettingsDialog from 'src/components/dialogs/SettingsDialog.vue'
 import ScreensaverOverlay from 'src/components/ScreensaverOverlay.vue'
 import { type MessageLanguages } from 'src/boot/i18n'
@@ -22,6 +23,9 @@ const settingsStore = useSettingsStore()
 const tasksStore = useTasksStore()
 const { startSyncInterval, stopSyncInterval } = useSync()
 const { isInactive, resetTimer } = useInactivityTimer()
+
+// Auto-update: verifica nova versão a cada 5 minutos
+useAutoUpdate(5)
 
 const isScreensaverActive = ref(false)
 
