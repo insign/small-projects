@@ -353,29 +353,21 @@ const onDoubleClickEdit = (task: Task) => {
   align-items: center;
 }
 
-.task-row--even,
-.task-row--even .q-slide-item {
+.task-row--even {
   background-color: $grey-3;
 }
 
 .body--dark {
   .task-row {
     background-color: black;
-
-    .q-slide-item {
-      background-color: black;
-    }
   }
 
   .task-row--even {
-    .q-slide-item {
-      background-color: $grey-10;
-    }
+    background-color: $grey-10;
   }
 }
 
-.drag-active,
-.drag-active .q-slide-item {
+.drag-active {
   background-color: $blue-5;
   opacity: 0.7;
   cursor: grabbing;
@@ -403,15 +395,7 @@ const onDoubleClickEdit = (task: Task) => {
   background-color: rgba(255, 0, 0, 0.15);
 }
 
-.not-done-yesterday .q-slide-item {
-  background-color: rgba(255, 0, 0, 0.15);
-}
-
 .body--dark .not-done-yesterday {
-  background-color: rgba(255, 0, 0, 0.25);
-}
-
-.body--dark .not-done-yesterday .q-slide-item {
   background-color: rgba(255, 0, 0, 0.25);
 }
 </style>
