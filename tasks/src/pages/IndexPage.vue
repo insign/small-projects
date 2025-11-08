@@ -1,9 +1,9 @@
 <template>
   <q-page class="q-pa-sm">
     <!-- Headers -->
-    <div class="row no-wrap q-gutter-x-sm">
+    <div class="row no-wrap q-gutter-x-xs">
       <div class="col text-weight-medium text-center" :style="headerStyle">&nbsp;</div>
-      <div v-for="day in days" :key="day.key" class="col-2 text-weight-medium text-center day-column q-mb-sm"
+      <div v-for="day in days" :key="day.key" class="col-1 text-weight-medium text-center day-column q-mb-sm"
         :style="headerStyle">
         {{ day.header }}
       </div>
@@ -14,7 +14,7 @@
       @end="onDragEnd" :delay="150" delay-on-touch-only>
       <template #item="{ element: task, index }">
         <div :class="{ 'task-row--even': index % 2 === 0 }">
-          <div class="row no-wrap q-gutter-x-sm task-row">
+          <div class="row no-wrap q-gutter-x-xs task-row">
             <div class="col">
               <q-slide-item :ref="(el) => setSlideItemRef(el as QSlideItem | null, task)" @left="() => onLeft(task)"
                 @right="() => onRight(task)" :aria-label="t('labels.taskActions')">
@@ -27,7 +27,7 @@
                 </q-item>
               </q-slide-item>
             </div>
-            <div v-for="day in days" :key="day.key" class="col-2 day-column"
+            <div v-for="day in days" :key="day.key" class="col-1 day-column"
               :class="{ 'today-column': day.key === 'today', 'long-pressing': longPressingRow === `${task.id}-${day.dateStr}` }">
               <q-item class="flex-center">
                 <q-checkbox v-if="isCheckboxVisible(task, day)"
@@ -53,7 +53,7 @@
     <!-- Checked Tasks (Not Draggable) -->
     <div v-for="(task, index) in checkedTasks" :key="task.id" class="task-list checked-list"
       :class="{ 'task-row--even': (uncheckedTasks.length + index) % 2 === 0 }">
-      <div class="row no-wrap q-gutter-x-sm task-row">
+      <div class="row no-wrap q-gutter-x-xs task-row">
         <div class="col">
           <q-slide-item :ref="(el) => setSlideItemRef(el as QSlideItem | null, task)" @left="() => onLeft(task)"
             @right="() => onRight(task)" :aria-label="t('labels.taskActions')">
@@ -66,7 +66,7 @@
             </q-item>
           </q-slide-item>
         </div>
-        <div v-for="day in days" :key="day.key" class="col-2 day-column"
+        <div v-for="day in days" :key="day.key" class="col-1 day-column"
           :class="{ 'long-pressing': longPressingRow === `${task.id}-${day.dateStr}` }">
           <q-item class="flex-center">
             <q-checkbox v-if="isCheckboxVisible(task, day)"
@@ -329,7 +329,8 @@ const onRight = (task: Task) => {
 }
 
 .day-column {
-  min-width: 60px;
+  min-width: 45px;
+  max-width: 60px;
 }
 
 .today-column .q-checkbox * {
