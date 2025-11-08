@@ -13,7 +13,7 @@
     <draggable v-model="uncheckedTasks" item-key="id" group="tasks" class="task-list" drag-class="drag-active"
       @end="onDragEnd" :delay="150" delay-on-touch-only>
       <template #item="{ element: task, index }">
-        <div :class="{ 'task-row--even': index % 2 === 0 }">
+        <div :class="{ 'task-row--even': index % 2 === 0, 'not-done-yesterday': isNotDoneYesterday(task) }">
           <div class="row no-wrap q-gutter-x-xs task-row">
             <div class="col">
               <q-slide-item :ref="(el) => setSlideItemRef(el as QSlideItem | null, task)" @left="() => onLeft(task)"
@@ -52,7 +52,7 @@
 
     <!-- Checked Tasks (Not Draggable) -->
     <div v-for="(task, index) in checkedTasks" :key="task.id" class="task-list checked-list"
-      :class="{ 'task-row--even': (uncheckedTasks.length + index) % 2 === 0 }">
+      :class="{ 'task-row--even': (uncheckedTasks.length + index) % 2 === 0, 'not-done-yesterday': isNotDoneYesterday(task) }">
       <div class="row no-wrap q-gutter-x-xs task-row">
         <div class="col">
           <q-slide-item :ref="(el) => setSlideItemRef(el as QSlideItem | null, task)" @left="() => onLeft(task)"
@@ -254,6 +254,14 @@ const getCheckboxColor = (task: Task, dateStr: string) => {
   return 'green'
 }
 
+const isNotDoneYesterday = (task: Task) => {
+  const yesterdayDay = { key: 'yesterday', dateStr: yesterdayStr.value }
+  return (
+    isCheckboxVisible(task, yesterdayDay) &&
+    task.checkedDates[yesterdayStr.value] === 'not-done'
+  )
+}
+
 const onDragEnd = () => {
   // v-model handles the reordering, and the computed setter updates the store
 }
@@ -344,5 +352,21 @@ const onRight = (task: Task) => {
 
 .body--dark .long-pressing {
   background-color: rgba(255, 0, 0, 0.3);
+}
+
+.not-done-yesterday {
+  background-color: rgba(255, 0, 0, 0.15);
+}
+
+.not-done-yesterday .q-slide-item {
+  background-color: rgba(255, 0, 0, 0.15);
+}
+
+.body--dark .not-done-yesterday {
+  background-color: rgba(255, 0, 0, 0.25);
+}
+
+.body--dark .not-done-yesterday .q-slide-item {
+  background-color: rgba(255, 0, 0, 0.25);
 }
 </style>
