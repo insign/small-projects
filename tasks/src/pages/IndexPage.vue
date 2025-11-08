@@ -37,6 +37,12 @@
                 class="q-pa-xs"
                 @dblclick="onDoubleClickEdit(task)"
                 @click="onQuickDone(task)"
+                @mousedown="startLongPressTitle(task.id)"
+                @mouseup="cancelLongPressTitle"
+                @mouseleave="cancelLongPressTitle"
+                @touchstart="startLongPressTitle(task.id)"
+                @touchend="cancelLongPressTitle"
+                @touchcancel="cancelLongPressTitle"
                 clickable
                 :class="{ 'flash-success': flashingRows.has(task.id) }"
                 :style="{
@@ -107,6 +113,12 @@
             class="text-grey-7 q-pa-xs"
             @dblclick="onDoubleClickEdit(task)"
             @click="onQuickDone(task)"
+            @mousedown="startLongPressTitle(task.id)"
+            @mouseup="cancelLongPressTitle"
+            @mouseleave="cancelLongPressTitle"
+            @touchstart="startLongPressTitle(task.id)"
+            @touchend="cancelLongPressTitle"
+            @touchcancel="cancelLongPressTitle"
             clickable
             :class="{ 'flash-success': flashingRows.has(task.id) }"
             :style="{
@@ -371,11 +383,16 @@ const isCheckboxVisible = (task: Task, day: { key: string; dateStr: string }): b
   return task.type === 'daily';
 };
 
-// Long press tracking
+// Long press tracking for checkboxes
 const longPressTimer = ref<number | null>(null);
 const longPressTarget = ref<{ taskId: string; dateStr: string } | null>(null);
 const longPressingRow = ref<string | null>(null);
 const longPressTriggered = ref(false);
+
+// Long press tracking for title
+const longPressTitleTimer = ref<number | null>(null);
+const longPressTitleTarget = ref<string | null>(null);
+const longPressTitleTriggered = ref(false);
 
 // Flash animation tracking
 const flashingRows = ref<Set<string>>(new Set());
@@ -398,6 +415,12 @@ const startFlash = (taskId: string) => {
  * @param task - The task to toggle
  */
 const onQuickDone = (task: Task) => {
+  // Ignore if long press was triggered on title
+  if (longPressTitleTriggered.value) {
+    longPressTitleTriggered.value = false;
+    return;
+  }
+
   // Start flash animation
   startFlash(task.id);
 
@@ -407,6 +430,42 @@ const onQuickDone = (task: Task) => {
     // If done, unmark; if not done, mark as done
     onCheckChange(task.id, todayStr.value, !isDone);
   }, 200);
+};
+
+/**
+ * Start long press on task title to mark as not-done
+ * @param taskId - The ID of the task
+ */
+const startLongPressTitle = (taskId: string) => {
+  longPressTitleTarget.value = taskId;
+  longPressTitleTriggered.value = false;
+
+  longPressTitleTimer.value = window.setTimeout(() => {
+    if (longPressTitleTarget.value) {
+      longPressTitleTriggered.value = true;
+      const task = tasksStore.tasks.find((t) => t.id === longPressTitleTarget.value);
+      if (task) {
+        // Check if task is visible for today
+        const todayDay = { key: 'today', dateStr: todayStr.value };
+        if (isCheckboxVisible(task, todayDay)) {
+          task.checkedDates[todayStr.value] = 'not-done';
+          tasksStore.saveTasks(true);
+        }
+      }
+      longPressTitleTarget.value = null;
+    }
+  }, 500);
+};
+
+/**
+ * Cancel long press on task title
+ */
+const cancelLongPressTitle = () => {
+  if (longPressTitleTimer.value) {
+    clearTimeout(longPressTitleTimer.value);
+    longPressTitleTimer.value = null;
+  }
+  longPressTitleTarget.value = null;
 };
 
 const onCheckChange = (taskId: string, dateStr: string, value: boolean | null) => {
