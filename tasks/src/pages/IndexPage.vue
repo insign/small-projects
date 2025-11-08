@@ -36,7 +36,9 @@
               <q-item
                 class="q-pa-xs"
                 @dblclick="onDoubleClickEdit(task)"
+                @click="onQuickDone(task)"
                 clickable
+                :class="{ 'flash-success': flashingRows.has(task.id) }"
                 :style="{
                   backgroundColor:
                     getShiftBackgroundColor(task) ||
@@ -373,6 +375,35 @@ const longPressTarget = ref<{ taskId: string; dateStr: string } | null>(null);
 const longPressingRow = ref<string | null>(null);
 const longPressTriggered = ref(false);
 
+// Flash animation tracking
+const flashingRows = ref<Set<string>>(new Set());
+
+/**
+ * Start flash animation for a task
+ * @param taskId - The ID of the task to flash
+ */
+const startFlash = (taskId: string) => {
+  flashingRows.value.add(taskId);
+  // Remove flash after animation completes (200ms)
+  setTimeout(() => {
+    flashingRows.value.delete(taskId);
+  }, 200);
+};
+
+/**
+ * Handle quick click on task title to mark today as done
+ * @param task - The task to mark as done
+ */
+const onQuickDone = (task: Task) => {
+  // Start flash animation
+  startFlash(task.id);
+
+  // After flash animation, mark task as done
+  setTimeout(() => {
+    onCheckChange(task.id, todayStr.value, true);
+  }, 200);
+};
+
 const onCheckChange = (taskId: string, dateStr: string, value: boolean | null) => {
   // Ignore normal click if long press was triggered
   if (value !== null && longPressTriggered.value) {
@@ -505,5 +536,23 @@ const onDoubleClickEdit = (task: Task) => {
 
 .body--dark .not-done-yesterday {
   background-color: rgba(255, 0, 0, 0.25);
+}
+
+/* Flash animation for quick task completion */
+@keyframes flash-success {
+  0% {
+    background-color: rgba(76, 175, 80, 0.3);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.flash-success {
+  animation: flash-success 0.2s ease-in-out;
+}
+
+.body--dark .flash-success {
+  background-color: rgba(76, 175, 80, 0.4);
 }
 </style>
