@@ -17,4 +17,6 @@ export interface Settings {
   darkMode: 'light' | 'auto' | 'dark'
   screensaverTimeout: number // in minutes, 0 to disable
   screensaverDuration: number // in seconds, 0 for 'until interaction'
+  requireFullscreen: boolean // require fullscreen for task operations
+  screensaverConfetti: boolean // enable confetti animation in screensaver
 }

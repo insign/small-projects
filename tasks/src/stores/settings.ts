@@ -14,6 +14,8 @@ export const useSettingsStore = defineStore('settings', () => {
   const darkMode = ref<'light' | 'auto' | 'dark'>('auto')
   const screensaverTimeout = ref<number>(0) // 0 means disabled
   const screensaverDuration = ref<number>(60) // in seconds, 0 for 'until interaction'
+  const requireFullscreen = ref<boolean>(true) // require fullscreen for task operations
+  const screensaverConfetti = ref<boolean>(true) // enable confetti animation in screensaver
   const version = ref(0)
 
   const getSettingsKey = () => (syncId.value ? `${syncId.value}${SETTINGS_KEY_SUFFIX}` : null)
@@ -30,6 +32,8 @@ export const useSettingsStore = defineStore('settings', () => {
       darkMode: darkMode.value,
       screensaverTimeout: screensaverTimeout.value,
       screensaverDuration: screensaverDuration.value,
+      requireFullscreen: requireFullscreen.value,
+      screensaverConfetti: screensaverConfetti.value,
     }
     LocalStorage.set(key, settings)
 
@@ -49,12 +53,16 @@ export const useSettingsStore = defineStore('settings', () => {
       darkMode.value = storedSettings?.darkMode || 'auto'
       screensaverTimeout.value = storedSettings?.screensaverTimeout || 0
       screensaverDuration.value = storedSettings?.screensaverDuration ?? 60
+      requireFullscreen.value = storedSettings?.requireFullscreen ?? true
+      screensaverConfetti.value = storedSettings?.screensaverConfetti ?? true
     } else {
       fontSize.value = 1
       language.value = 'pt-BR'
       darkMode.value = 'auto'
       screensaverTimeout.value = 0
       screensaverDuration.value = 60
+      requireFullscreen.value = true
+      screensaverConfetti.value = true
     }
     loadVersion()
   }
@@ -114,6 +122,20 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }
 
+  function setRequireFullscreen(require: boolean) {
+    if (require !== requireFullscreen.value) {
+      requireFullscreen.value = require
+      saveSettings(true)
+    }
+  }
+
+  function setScreensaverConfetti(enable: boolean) {
+    if (enable !== screensaverConfetti.value) {
+      screensaverConfetti.value = enable
+      saveSettings(true)
+    }
+  }
+
   function setAllSettingsFromRemote(newSettings: Partial<Settings>) {
     let changed = false
     if (newSettings.fontSize !== undefined && newSettings.fontSize !== fontSize.value) {
@@ -140,6 +162,20 @@ export const useSettingsStore = defineStore('settings', () => {
       newSettings.screensaverDuration !== screensaverDuration.value
     ) {
       screensaverDuration.value = newSettings.screensaverDuration
+      changed = true
+    }
+    if (
+      newSettings.requireFullscreen !== undefined &&
+      newSettings.requireFullscreen !== requireFullscreen.value
+    ) {
+      requireFullscreen.value = newSettings.requireFullscreen
+      changed = true
+    }
+    if (
+      newSettings.screensaverConfetti !== undefined &&
+      newSettings.screensaverConfetti !== screensaverConfetti.value
+    ) {
+      screensaverConfetti.value = newSettings.screensaverConfetti
       changed = true
     }
 
@@ -178,6 +214,8 @@ export const useSettingsStore = defineStore('settings', () => {
     darkMode,
     screensaverTimeout,
     screensaverDuration,
+    requireFullscreen,
+    screensaverConfetti,
     version,
     setVersion,
     loadSettings,
@@ -188,6 +226,8 @@ export const useSettingsStore = defineStore('settings', () => {
     setDarkMode,
     setScreensaverTimeout,
     setScreensaverDuration,
+    setRequireFullscreen,
+    setScreensaverConfetti,
     loadInitialId,
     setAllSettingsFromRemote,
   }

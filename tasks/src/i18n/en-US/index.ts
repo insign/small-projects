@@ -33,6 +33,8 @@ export default {
     dark: 'Dark',
     screensaverTimeout: 'Screensaver Timeout',
     screensaverDuration: 'Screensaver Duration',
+    requireFullscreen: 'Require Fullscreen',
+    screensaverConfetti: 'Screensaver Confetti',
     disabled: 'Disabled',
     minutesUnit: '{count} min',
     secondsUnit: '{count}s',

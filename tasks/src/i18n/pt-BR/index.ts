@@ -30,6 +30,8 @@ export default {
     dark: 'Escuro',
     screensaverTimeout: 'Tempo para Protetor de Tela',
     screensaverDuration: 'Duração do Protetor de Tela',
+    requireFullscreen: 'Tela cheia obrigatória',
+    screensaverConfetti: 'Confetes no protetor de tela',
     disabled: 'Desativado',
     minutesUnit: '{count} min',
     secondsUnit: '{count}s',

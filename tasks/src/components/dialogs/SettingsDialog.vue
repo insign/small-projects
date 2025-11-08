@@ -32,6 +32,8 @@
             { label: t('labels.dark'), value: 'dark' },
           ]" />
         </div>
+        <q-toggle v-model="localRequireFullscreen" :label="t('labels.requireFullscreen')" />
+        <q-toggle v-model="localScreensaverConfetti" :label="t('labels.screensaverConfetti')" />
         <div>
           <q-slider v-model="localFontSize" label :label-value="`${localFontSize}rem`" :min="0.5" :max="2" :step="0.1"
             class="q-mt-lg" />
@@ -72,6 +74,8 @@ const localLanguage = ref(settingsStore.language)
 const localDarkMode = ref(settingsStore.darkMode)
 const localScreensaverTimeout = ref(settingsStore.screensaverTimeout)
 const localScreensaverDuration = ref(settingsStore.screensaverDuration)
+const localRequireFullscreen = ref(settingsStore.requireFullscreen)
+const localScreensaverConfetti = ref(settingsStore.screensaverConfetti)
 
 const langOptions = [
   { value: 'en-US', label: 'English' },
@@ -97,6 +101,8 @@ const onSaveClick = () => {
     settingsStore.setDarkMode(localDarkMode.value)
     settingsStore.setScreensaverTimeout(localScreensaverTimeout.value)
     settingsStore.setScreensaverDuration(localScreensaverDuration.value)
+    settingsStore.setRequireFullscreen(localRequireFullscreen.value)
+    settingsStore.setScreensaverConfetti(localScreensaverConfetti.value)
     onDialogOK()
   }
 }

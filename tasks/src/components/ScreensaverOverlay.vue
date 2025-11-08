@@ -1,9 +1,13 @@
 <template>
-  <div v-if="isActive" class="fullscreen transparent-overlay" @click="deactivate" @touchstart.prevent="deactivate"></div>
+  <div v-if="isActive" class="fullscreen transparent-overlay" @click="deactivate" @touchstart.prevent="deactivate">
+    <div v-if="showConfetti" class="confetti-container">
+      <div v-for="confetti in confettiPieces" :key="confetti.id" :style="getConfettiStyle(confetti)" class="confetti-piece"></div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onUnmounted } from 'vue'
+import { ref, watch, onUnmounted, computed } from 'vue'
 import { useSettingsStore } from 'src/stores/settings'
 import { useScreensaverStore } from 'src/stores/screensaver'
 
@@ -19,8 +23,44 @@ const screensaverStore = useScreensaverStore()
 let screensaverTimeout: NodeJS.Timeout | null = null
 let pixelShiftInterval: NodeJS.Timeout | null = null
 let colorShiftInterval: NodeJS.Timeout | null = null
+let confettiInterval: NodeJS.Timeout | null = null
 
 const appElement = ref<HTMLElement | null>(null)
+
+// Confetti configuration
+const showConfetti = computed(() => settingsStore.screensaverConfetti)
+const confettiPieces = ref<Array<{ id: number; x: number; y: number; delay: number; color: string }>>([])
+
+const confettiColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2']
+
+// Generate new confetti pieces
+const generateConfetti = () => {
+  if (!showConfetti.value) return
+
+  const newConfetti = Array.from({ length: 50 }, (_, i) => ({
+    id: Date.now() + i,
+    x: Math.random() * 100,
+    y: -10,
+    delay: Math.random() * 2,
+    color: confettiColors[Math.floor(Math.random() * confettiColors.length)]
+  }))
+
+  confettiPieces.value = [...confettiPieces.value, ...newConfetti]
+
+  // Remove old confetti pieces after 10 seconds
+  setTimeout(() => {
+    confettiPieces.value = confettiPieces.value.filter(c => !newConfetti.find(nc => nc.id === c.id))
+  }, 10000)
+}
+
+const getConfettiStyle = (confetti: { x: number; y: number; delay: number; color: string }) => {
+  return {
+    left: `${confetti.x}%`,
+    top: `${confetti.y}%`,
+    backgroundColor: confetti.color,
+    animationDelay: `${confetti.delay}s`,
+  }
+}
 
 const pixelShift = () => {
   if (!appElement.value) {
@@ -38,10 +78,12 @@ const stop = () => {
   if (screensaverTimeout) clearTimeout(screensaverTimeout)
   if (pixelShiftInterval) clearInterval(pixelShiftInterval)
   if (colorShiftInterval) clearInterval(colorShiftInterval)
+  if (confettiInterval) clearInterval(confettiInterval)
 
   screensaverTimeout = null
   pixelShiftInterval = null
   colorShiftInterval = null
+  confettiInterval = null
 
   if (appElement.value) {
     appElement.value.style.transition = 'transform 0.5s ease'
@@ -65,6 +107,12 @@ const start = () => {
   // Shift colors every 5 seconds
   colorShiftInterval = setInterval(screensaverStore.randomizeColors, 5000)
 
+  // Generate confetti every 3 seconds if enabled
+  if (showConfetti.value) {
+    confettiInterval = setInterval(generateConfetti, 3000)
+    // Initial confetti burst
+    generateConfetti()
+  }
 
   // Initial shifts
   setTimeout(pixelShift, 100)
@@ -94,9 +142,39 @@ onUnmounted(() => {
 
 <style scoped>
 .transparent-overlay {
-  z-index: 9999;
+  z-index: 99999;
   /* A very faint background to ensure it captures clicks, but is virtually invisible */
   background: rgba(0, 0, 0, 0.001);
   cursor: pointer;
+}
+
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 100000;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  animation: confetti-fall 10s linear forwards;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-10vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0;
+  }
 }
 </style>

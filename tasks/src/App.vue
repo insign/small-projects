@@ -1,6 +1,7 @@
 <template>
   <router-view />
   <ScreensaverOverlay :is-active="isScreensaverActive" @deactivated="onScreensaverDeactivated" />
+  <FullscreenOverlay v-if="settingsStore.requireFullscreen" />
 </template>
 
 <script setup lang="ts">
@@ -15,6 +16,7 @@ import { useInactivityTimer } from 'src/composables/useInactivityTimer'
 import { useAutoUpdate } from 'src/composables/useAutoUpdate'
 import SettingsDialog from 'src/components/dialogs/SettingsDialog.vue'
 import ScreensaverOverlay from 'src/components/ScreensaverOverlay.vue'
+import FullscreenOverlay from 'src/components/FullscreenOverlay.vue'
 import { type MessageLanguages } from 'src/boot/i18n'
 
 const $q = useQuasar()

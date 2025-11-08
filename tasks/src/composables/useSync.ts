@@ -43,6 +43,8 @@ export function useSync() {
           darkMode: settingsStore.darkMode,
           screensaverTimeout: settingsStore.screensaverTimeout,
           screensaverDuration: settingsStore.screensaverDuration,
+          requireFullscreen: settingsStore.requireFullscreen,
+          screensaverConfetti: settingsStore.screensaverConfetti,
         }
         const response = await putData(settingsId, dataToPush)
         settingsStore.setVersion(response.version)
