@@ -361,29 +361,34 @@ const onDoubleClickEdit = (task: Task) => {
   padding: 0;
 }
 
-/* Apply zebra striping using the class on the wrapper */
-.task-row--even {
+/* Apply zebra striping and red background to the q-item elements inside */
+.task-row--even .q-item,
+:not(.task-row--even) + .task-row--even .q-item,
+.task-list.checked-list .task-row--even .q-item {
   background-color: $grey-3 !important;
-  padding: 4px 0;
 }
 
 /* Apply red background for tasks not done yesterday */
-.not-done-yesterday {
+.not-done-yesterday .q-item {
   background-color: rgba(255, 0, 0, 0.15) !important;
-  padding: 4px 0;
+}
+
+/* Also apply to checked list */
+.task-list.checked-list .not-done-yesterday .q-item {
+  background-color: rgba(255, 0, 0, 0.15) !important;
 }
 
 /* Dark mode */
 .body--dark {
-  .task-row {
+  .task-row .q-item {
     background-color: black;
   }
 
-  .task-row--even {
+  .task-row--even .q-item {
     background-color: $grey-10 !important;
   }
 
-  .not-done-yesterday {
+  .not-done-yesterday .q-item {
     background-color: rgba(255, 0, 0, 0.25) !important;
   }
 }
