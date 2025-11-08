@@ -33,7 +33,18 @@
         >
           <div class="row no-wrap q-gutter-x-xs task-row" :style="{ height: taskRowHeight }">
             <div class="col">
-              <q-item class="q-pa-xs" @dblclick="onDoubleClickEdit(task)" clickable>
+              <q-item
+                class="q-pa-xs"
+                @dblclick="onDoubleClickEdit(task)"
+                clickable
+                :style="{
+                  backgroundColor: isNotDoneYesterday(task)
+                    ? $q.dark.isActive ? 'rgba(255, 0, 0, 0.25)' : 'rgba(255, 0, 0, 0.15)'
+                    : index % 2 === 0
+                      ? $q.dark.isActive ? '#1e1e1e' : '#f5f5f5'
+                      : 'transparent'
+                }"
+              >
                 <q-item-section :style="{ fontSize: `${settingsStore.fontSize}rem` }">
                   {{ task.title }}
                 </q-item-section>
@@ -83,7 +94,18 @@
     >
       <div class="row no-wrap q-gutter-x-xs task-row" :style="{ height: taskRowHeight }">
         <div class="col">
-          <q-item class="text-grey-7 q-pa-xs" @dblclick="onDoubleClickEdit(task)" clickable>
+          <q-item
+            class="text-grey-7 q-pa-xs"
+            @dblclick="onDoubleClickEdit(task)"
+            clickable
+            :style="{
+              backgroundColor: isNotDoneYesterday(task)
+                ? $q.dark.isActive ? 'rgba(255, 0, 0, 0.25)' : 'rgba(255, 0, 0, 0.15)'
+                : (uncheckedTasks.length + index) % 2 === 0
+                  ? $q.dark.isActive ? '#1e1e1e' : '#f5f5f5'
+                  : 'transparent'
+            }"
+          >
             <q-item-section :style="{ fontSize: `${settingsStore.fontSize}rem` }">
               {{ task.title }}
             </q-item-section>
@@ -359,38 +381,6 @@ const onDoubleClickEdit = (task: Task) => {
   /* This is the div with task-row--even and not-done-yesterday classes */
   width: 100%;
   padding: 0;
-}
-
-/* Apply zebra striping and red background to the q-item elements inside */
-.task-row--even .q-item,
-:not(.task-row--even) + .task-row--even .q-item,
-.task-list.checked-list .task-row--even .q-item {
-  background-color: $grey-3 !important;
-}
-
-/* Apply red background for tasks not done yesterday */
-.not-done-yesterday .q-item {
-  background-color: rgba(255, 0, 0, 0.15) !important;
-}
-
-/* Also apply to checked list */
-.task-list.checked-list .not-done-yesterday .q-item {
-  background-color: rgba(255, 0, 0, 0.15) !important;
-}
-
-/* Dark mode */
-.body--dark {
-  .task-row .q-item {
-    background-color: black;
-  }
-
-  .task-row--even .q-item {
-    background-color: $grey-10 !important;
-  }
-
-  .not-done-yesterday .q-item {
-    background-color: rgba(255, 0, 0, 0.25) !important;
-  }
 }
 
 .drag-active {
