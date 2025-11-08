@@ -14,7 +14,7 @@
       @end="onDragEnd" :delay="150" delay-on-touch-only>
       <template #item="{ element: task, index }">
         <div :class="{ 'task-row--even': index % 2 === 0, 'not-done-yesterday': isNotDoneYesterday(task) }">
-          <div class="row no-wrap q-gutter-x-xs task-row">
+          <div class="row no-wrap q-gutter-x-xs task-row" :style="{ height: taskRowHeight }">
             <div class="col">
               <q-slide-item :ref="(el) => setSlideItemRef(el as QSlideItem | null, task)" @left="() => onLeft(task)"
                 @right="() => onRight(task)" :aria-label="t('labels.taskActions')">
@@ -52,8 +52,9 @@
 
     <!-- Checked Tasks (Not Draggable) -->
     <div v-for="(task, index) in checkedTasks" :key="task.id" class="task-list checked-list"
-      :class="{ 'task-row--even': (uncheckedTasks.length + index) % 2 === 0, 'not-done-yesterday': isNotDoneYesterday(task) }">
-      <div class="row no-wrap q-gutter-x-xs task-row">
+      :class="{ 'task-row--even': (uncheckedTasks.length + index) % 2 === 0, 'not-done-yesterday': isNotDoneYesterday(task) }"
+      :style="{ minHeight: taskListMinHeight }">
+      <div class="row no-wrap q-gutter-x-xs task-row" :style="{ height: taskRowHeight }">
         <div class="col">
           <q-slide-item :ref="(el) => setSlideItemRef(el as QSlideItem | null, task)" @left="() => onLeft(task)"
             @right="() => onRight(task)" :aria-label="t('labels.taskActions')">
@@ -110,6 +111,8 @@ const checkboxSize = computed(() => `${settingsStore.fontSize * 2.8}rem`)
 const headerStyle = computed(() => ({
   fontSize: `${settingsStore.fontSize * 0.7}rem`,
 }))
+const taskRowHeight = computed(() => `${settingsStore.fontSize * 50}px`)
+const taskListMinHeight = computed(() => `${settingsStore.fontSize * 50}px`)
 
 const slideItemRefs = ref(new Map<string, QSlideItem>())
 const setSlideItemRef = (el: QSlideItem | null, task: Task) => {
@@ -307,13 +310,13 @@ const onRight = (task: Task) => {
 
 <style lang="scss" scoped>
 .task-list {
-  min-height: 50px;
+  /* min-height is now set dynamically via style binding */
 }
 
 .task-row,
 .task-row-title {
   min-width: 30px;
-  height: 50px;
+  /* height is now set dynamically via style binding */
   display: flex;
   align-items: center;
 }
