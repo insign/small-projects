@@ -258,7 +258,7 @@ const isNotDoneYesterday = (task: Task) => {
   const yesterdayDay = { key: 'yesterday', dateStr: yesterdayStr.value }
   return (
     isCheckboxVisible(task, yesterdayDay) &&
-    task.checkedDates[yesterdayStr.value] === 'not-done'
+    task.checkedDates[yesterdayStr.value] === undefined
   )
 }
 
