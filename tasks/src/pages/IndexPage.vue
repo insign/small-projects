@@ -59,6 +59,7 @@
               class="col-1 day-column"
               :class="{
                 'today-column': day.key === 'today',
+                'yesterday-column': day.key === 'yesterday',
                 'long-pressing': longPressingRow === `${task.id}-${day.dateStr}`,
               }"
             >
@@ -121,7 +122,11 @@
           v-for="day in allDays"
           :key="day.key"
           class="col-1 day-column"
-          :class="{ 'long-pressing': longPressingRow === `${task.id}-${day.dateStr}` }"
+          :class="{
+            'today-column': day.key === 'today',
+            'yesterday-column': day.key === 'yesterday',
+            'long-pressing': longPressingRow === `${task.id}-${day.dateStr}`,
+          }"
         >
           <q-item class="flex-center">
             <q-checkbox
@@ -481,6 +486,10 @@ const onDoubleClickEdit = (task: Task) => {
 
 .today-column .q-checkbox * {
   color: $blue-5;
+}
+
+.yesterday-column {
+  opacity: 0.6;
 }
 
 .long-pressing {
