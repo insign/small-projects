@@ -353,10 +353,20 @@ const onDoubleClickEdit = (task: Task) => {
   align-items: center;
 }
 
+/* The wrapper div that contains each task row */
+.task-list > div > div,
+.task-list.checked-list > div {
+  /* This is the div with task-row--even and not-done-yesterday classes */
+  width: 100%;
+  padding: 0;
+}
+
+/* Apply zebra striping using the class on the wrapper */
 .task-row--even {
   background-color: $grey-3;
 }
 
+/* Dark mode */
 .body--dark {
   .task-row {
     background-color: black;
