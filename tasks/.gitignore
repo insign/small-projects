@@ -37,3 +37,4 @@ yarn-error.log*
 
 output/*
 output.txt
+repomix-output.xml
