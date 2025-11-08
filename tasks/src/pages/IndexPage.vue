@@ -106,7 +106,7 @@ const tasksStore = useTasksStore()
 const settingsStore = useSettingsStore()
 const { today, yesterday, tomorrow, todayStr, yesterdayStr, tomorrowStr } = useDateManager()
 
-const checkboxSize = computed(() => `${settingsStore.fontSize * 3.5}rem`)
+const checkboxSize = computed(() => `${settingsStore.fontSize * 2.8}rem`)
 const headerStyle = computed(() => ({
   fontSize: `${settingsStore.fontSize * 0.7}rem`,
 }))
