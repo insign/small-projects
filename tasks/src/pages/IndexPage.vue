@@ -28,11 +28,21 @@
               </q-slide-item>
             </div>
             <div v-for="day in days" :key="day.key" class="col-2 day-column"
-              :class="{ 'today-column': day.key === 'today' }">
+              :class="{ 'today-column': day.key === 'today', 'long-pressing': longPressingRow === `${task.id}-${day.dateStr}` }">
               <q-item class="flex-center">
-                <q-checkbox v-if="isCheckboxVisible(task, day)" :model-value="!!task.checkedDates[day.dateStr]"
-                  @update:model-value="(val) => onCheckChange(task.id, day.dateStr, val)" :size="checkboxSize"
-                  color="green" />
+                <q-checkbox v-if="isCheckboxVisible(task, day)"
+                  :model-value="getCheckboxValue(task, day.dateStr)"
+                  :indeterminate-value="'indeterminate'"
+                  :indeterminate-icon="'remove'"
+                  @update:model-value="(val) => onCheckChange(task.id, day.dateStr, val as boolean)"
+                  :size="checkboxSize"
+                  :color="getCheckboxColor(task, day.dateStr)"
+                  @mousedown="startLongPress(task.id, day.dateStr)"
+                  @mouseup="cancelLongPress"
+                  @mouseleave="cancelLongPress"
+                  @touchstart="startLongPress(task.id, day.dateStr)"
+                  @touchend="cancelLongPress"
+                  @touchcancel="cancelLongPress" />
               </q-item>
             </div>
           </div>
@@ -56,11 +66,22 @@
             </q-item>
           </q-slide-item>
         </div>
-        <div v-for="day in days" :key="day.key" class="col-2 day-column">
+        <div v-for="day in days" :key="day.key" class="col-2 day-column"
+          :class="{ 'long-pressing': longPressingRow === `${task.id}-${day.dateStr}` }">
           <q-item class="flex-center">
-            <q-checkbox v-if="isCheckboxVisible(task, day)" :model-value="!!task.checkedDates[day.dateStr]"
-              color="green" @update:model-value="(val) => onCheckChange(task.id, day.dateStr, val)"
-              :size="checkboxSize" />
+            <q-checkbox v-if="isCheckboxVisible(task, day)"
+              :model-value="getCheckboxValue(task, day.dateStr)"
+              :indeterminate-value="'indeterminate'"
+              :indeterminate-icon="'remove'"
+              @update:model-value="(val) => onCheckChange(task.id, day.dateStr, val as boolean)"
+              :size="checkboxSize"
+              :color="getCheckboxColor(task, day.dateStr)"
+              @mousedown="startLongPress(task.id, day.dateStr)"
+              @mouseup="cancelLongPress"
+              @mouseleave="cancelLongPress"
+              @touchstart="startLongPress(task.id, day.dateStr)"
+              @touchend="cancelLongPress"
+              @touchcancel="cancelLongPress" />
           </q-item>
         </div>
       </div>
@@ -122,7 +143,10 @@ const visibleTasks = computed(() => tasksStore.tasks.filter(isTaskVisibleForToda
 const uncheckedTasks = computed({
   get: () =>
     visibleTasks.value
-      .filter((t) => t.checkedDates[todayStr.value] !== true)
+      .filter((t) => {
+        const status = t.checkedDates[todayStr.value]
+        return status !== true && status !== 'not-done'
+      })
       .sort((a, b) => a.order - b.order),
   set: (newOrder) => {
     tasksStore.updateTaskOrder(newOrder)
@@ -131,7 +155,10 @@ const uncheckedTasks = computed({
 
 const checkedTasks = computed(() =>
   visibleTasks.value
-    .filter((t) => t.checkedDates[todayStr.value] === true)
+    .filter((t) => {
+      const status = t.checkedDates[todayStr.value]
+      return status === true || status === 'not-done'
+    })
     .sort((a, b) => a.order - b.order)
 )
 
@@ -155,16 +182,76 @@ const isCheckboxVisible = (task: Task, day: { key: string; dateStr: string }): b
   return task.type === 'daily'
 }
 
-const onCheckChange = (taskId: string, dateStr: string, value: boolean) => {
+// Long press tracking
+const longPressTimer = ref<number | null>(null)
+const longPressTarget = ref<{ taskId: string; dateStr: string } | null>(null)
+const longPressingRow = ref<string | null>(null)
+const longPressTriggered = ref(false)
+
+const onCheckChange = (taskId: string, dateStr: string, value: boolean | null) => {
+  // Ignore normal click if long press was triggered
+  if (value !== null && longPressTriggered.value) {
+    longPressTriggered.value = false
+    return
+  }
+
   const task = tasksStore.tasks.find((t) => t.id === taskId)
   if (task) {
-    if (value) {
-      task.checkedDates[dateStr] = true
-    } else {
-      delete task.checkedDates[dateStr]
+    // Long press action - toggle between 'not-done' and pending
+    if (value === null) {
+      if (task.checkedDates[dateStr] === 'not-done') {
+        delete task.checkedDates[dateStr]
+      } else {
+        task.checkedDates[dateStr] = 'not-done'
+      }
+    }
+    // Normal click - toggle between done and pending
+    else {
+      if (value) {
+        task.checkedDates[dateStr] = true
+      } else {
+        delete task.checkedDates[dateStr]
+      }
     }
     tasksStore.saveTasks(true)
   }
+}
+
+const startLongPress = (taskId: string, dateStr: string) => {
+  longPressTarget.value = { taskId, dateStr }
+  longPressingRow.value = `${taskId}-${dateStr}`
+  longPressTriggered.value = false
+
+  longPressTimer.value = window.setTimeout(() => {
+    if (longPressTarget.value) {
+      longPressTriggered.value = true
+      onCheckChange(longPressTarget.value.taskId, longPressTarget.value.dateStr, null)
+      longPressTarget.value = null
+      longPressingRow.value = null
+    }
+  }, 500)
+}
+
+const cancelLongPress = () => {
+  if (longPressTimer.value) {
+    clearTimeout(longPressTimer.value)
+    longPressTimer.value = null
+  }
+  longPressTarget.value = null
+  longPressingRow.value = null
+}
+
+const getCheckboxValue = (task: Task, dateStr: string) => {
+  const value = task.checkedDates[dateStr]
+  if (value === true) return true
+  if (value === 'not-done') return 'indeterminate'
+  return false
+}
+
+const getCheckboxColor = (task: Task, dateStr: string) => {
+  const value = task.checkedDates[dateStr]
+  if (value === 'not-done') return 'red'
+  return 'green'
 }
 
 const onDragEnd = () => {
@@ -247,5 +334,14 @@ const onRight = (task: Task) => {
 
 .today-column .q-checkbox * {
   color: $blue-5;
+}
+
+.long-pressing {
+  background-color: rgba(255, 0, 0, 0.2);
+  transition: background-color 0.3s ease-in-out;
+}
+
+.body--dark .long-pressing {
+  background-color: rgba(255, 0, 0, 0.3);
 }
 </style>

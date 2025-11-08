@@ -5,7 +5,7 @@ export interface Task {
   title: string
   type: TaskType
   daysOfWeek?: number[] // 0 for Sunday, 1 for Monday, etc.
-  checkedDates: Record<string, boolean> // YYYY-MM-DD -> true/false
+  checkedDates: Record<string, boolean | 'not-done'> // YYYY-MM-DD -> true (done) / 'not-done' / undefined (pending)
   order: number
   createdAt: number
 }
