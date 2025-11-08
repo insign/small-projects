@@ -147,7 +147,17 @@ const uncheckedTasks = computed({
         const status = t.checkedDates[todayStr.value]
         return status !== true && status !== 'not-done'
       })
-      .sort((a, b) => a.order - b.order),
+      .sort((a, b) => {
+        const aPendingYesterday = isNotDoneYesterday(a)
+        const bPendingYesterday = isNotDoneYesterday(b)
+
+        // Priorizar tarefas pendentes ontem
+        if (aPendingYesterday && !bPendingYesterday) return -1
+        if (!aPendingYesterday && bPendingYesterday) return 1
+
+        // Se ambas ou nenhuma está pendente ontem, ordenar por order
+        return a.order - b.order
+      }),
   set: (newOrder) => {
     tasksStore.updateTaskOrder(newOrder)
   },
