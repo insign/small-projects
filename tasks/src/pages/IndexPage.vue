@@ -38,11 +38,14 @@
                 @dblclick="onDoubleClickEdit(task)"
                 clickable
                 :style="{
-                  backgroundColor: isNotDoneYesterday(task)
-                    ? $q.dark.isActive ? 'rgba(255, 0, 0, 0.25)' : 'rgba(255, 0, 0, 0.15)'
-                    : index % 2 === 0
-                      ? $q.dark.isActive ? '#1e1e1e' : '#f5f5f5'
-                      : 'transparent'
+                  backgroundColor: getShiftBackgroundColor(task)
+                    || (isNotDoneYesterday(task)
+                      ? $q.dark.isActive ? 'rgba(255, 0, 0, 0.25)' : 'rgba(255, 0, 0, 0.15)'
+                      : (index % 2 === 0
+                        ? $q.dark.isActive ? '#1e1e1e' : '#f5f5f5'
+                        : 'transparent'
+                      )
+                    )
                 }"
               >
                 <q-item-section :style="{ fontSize: `${settingsStore.fontSize}rem` }">
@@ -99,11 +102,14 @@
             @dblclick="onDoubleClickEdit(task)"
             clickable
             :style="{
-              backgroundColor: isNotDoneYesterday(task)
-                ? $q.dark.isActive ? 'rgba(255, 0, 0, 0.25)' : 'rgba(255, 0, 0, 0.15)'
-                : (uncheckedTasks.length + index) % 2 === 0
-                  ? $q.dark.isActive ? '#1e1e1e' : '#f5f5f5'
-                  : 'transparent'
+              backgroundColor: getShiftBackgroundColor(task)
+                || (isNotDoneYesterday(task)
+                  ? $q.dark.isActive ? 'rgba(255, 0, 0, 0.25)' : 'rgba(255, 0, 0, 0.15)'
+                  : ((uncheckedTasks.length + index) % 2 === 0
+                    ? $q.dark.isActive ? '#1e1e1e' : '#f5f5f5'
+                    : 'transparent'
+                  )
+                )
             }"
           >
             <q-item-section :style="{ fontSize: `${settingsStore.fontSize}rem` }">
@@ -160,6 +166,60 @@ const headerStyle = computed(() => ({
   fontSize: `${settingsStore.fontSize * 0.7}rem`,
 }));
 const taskRowHeight = computed(() => `${settingsStore.taskRowHeight}px`);
+
+/**
+ * Get current time shift based on the current hour
+ * @returns 'morning', 'afternoon', 'night', or null
+ */
+const getCurrentShift = (): 'morning' | 'afternoon' | 'night' | null => {
+  const hour = new Date().getHours();
+
+  if (hour >= 6 && hour < 13) {
+    return 'morning';
+  } else if (hour >= 13 && hour < 18) {
+    return 'afternoon';
+  } else if (hour >= 18 || hour < 2) {
+    return 'night';
+  }
+
+  return null;
+};
+
+/**
+ * Get background color for task based on shift and current time
+ * @param task - The task to check
+ * @returns Background color string or null
+ */
+const getShiftBackgroundColor = (task: Task): string | null => {
+  // Check if task has a shift defined
+  if (!task.shift || task.shift === 'none') {
+    return null;
+  }
+
+  // Check if current time matches the task's shift
+  const currentShift = getCurrentShift();
+  if (currentShift !== task.shift) {
+    return null;
+  }
+
+  // Get task status for today
+  const todayStatus = task.checkedDates[todayStr.value];
+
+  // Only apply color if task is pending (not done and not marked as not-done)
+  if (todayStatus === true || todayStatus === 'not-done') {
+    return null;
+  }
+
+  // Define colors for each shift
+  const isDark = $q.dark.isActive;
+  const colors = {
+    morning: isDark ? '#4A4A2A' : '#FFF9C4', // Light yellow/amber
+    afternoon: isDark ? '#5A3A1A' : '#FFB74D', // Orange
+    night: isDark ? '#3D2A4A' : '#CE93D8', // Purple
+  };
+
+  return colors[task.shift] || null;
+};
 
 const isTaskVisibleForToday = (task: Task): boolean => {
   if (task.type === 'once') {
