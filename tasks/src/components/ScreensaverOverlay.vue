@@ -199,7 +199,7 @@ onUnmounted(() => {
     opacity: 1;
   }
   100% {
-    transform: translateY(120vh) rotate(720deg);
+    transform: translateY(200vh) rotate(720deg);
     opacity: 1;
   }
 }
