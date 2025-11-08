@@ -3,34 +3,54 @@
     <!-- Headers -->
     <div v-if="settingsStore.dayHeaderFormat !== 'none'" class="row no-wrap q-gutter-x-xs">
       <div class="col text-weight-medium text-center" :style="headerStyle">&nbsp;</div>
-      <div v-for="day in days" :key="day.key" class="col-1 text-weight-medium text-center day-column q-mb-sm"
-        :style="headerStyle">
+      <div
+        v-for="day in days"
+        :key="day.key"
+        class="col-1 text-weight-medium text-center day-column q-mb-sm"
+        :style="headerStyle"
+      >
         {{ day.header }}
       </div>
     </div>
 
     <!-- Unchecked Tasks -->
-    <draggable v-model="uncheckedTasks" item-key="id" group="tasks" class="task-list" drag-class="drag-active"
-      @end="onDragEnd" :delay="150" delay-on-touch-only>
+    <draggable
+      v-model="uncheckedTasks"
+      item-key="id"
+      group="tasks"
+      class="task-list"
+      drag-class="drag-active"
+      @end="onDragEnd"
+      :delay="150"
+      delay-on-touch-only
+    >
       <template #item="{ element: task, index }">
-        <div :class="{ 'task-row--even': index % 2 === 0, 'not-done-yesterday': isNotDoneYesterday(task) }">
+        <div
+          :class="{
+            'task-row--even': index % 2 === 0,
+            'not-done-yesterday': isNotDoneYesterday(task),
+          }"
+        >
           <div class="row no-wrap q-gutter-x-xs task-row" :style="{ height: taskRowHeight }">
             <div class="col">
-              <q-slide-item :ref="(el) => setSlideItemRef(el as QSlideItem | null, task)" @left="() => onLeft(task)"
-                @right="() => onRight(task)" :aria-label="t('labels.taskActions')">
-                <template #left><q-icon name="edit" /></template>
-                <template #right><q-icon name="delete" /></template>
-                <q-item class="q-pa-xs">
-                  <q-item-section :style="{ fontSize: `${settingsStore.fontSize}rem` }">
-                    {{ task.title }}
-                  </q-item-section>
-                </q-item>
-              </q-slide-item>
+              <q-item class="q-pa-xs" @dblclick="onDoubleClickEdit(task)" clickable>
+                <q-item-section :style="{ fontSize: `${settingsStore.fontSize}rem` }">
+                  {{ task.title }}
+                </q-item-section>
+              </q-item>
             </div>
-            <div v-for="day in allDays" :key="day.key" class="col-1 day-column"
-              :class="{ 'today-column': day.key === 'today', 'long-pressing': longPressingRow === `${task.id}-${day.dateStr}` }">
+            <div
+              v-for="day in allDays"
+              :key="day.key"
+              class="col-1 day-column"
+              :class="{
+                'today-column': day.key === 'today',
+                'long-pressing': longPressingRow === `${task.id}-${day.dateStr}`,
+              }"
+            >
               <q-item class="flex-center">
-                <q-checkbox v-if="isCheckboxVisible(task, day)"
+                <q-checkbox
+                  v-if="isCheckboxVisible(task, day)"
                   :model-value="getCheckboxValue(task, day.dateStr)"
                   :indeterminate-value="'indeterminate'"
                   :indeterminate-icon="'remove'"
@@ -42,7 +62,8 @@
                   @mouseleave="cancelLongPress"
                   @touchstart="startLongPress(task.id, day.dateStr)"
                   @touchend="cancelLongPress"
-                  @touchcancel="cancelLongPress" />
+                  @touchcancel="cancelLongPress"
+                />
               </q-item>
             </div>
           </div>
@@ -51,25 +72,32 @@
     </draggable>
 
     <!-- Checked Tasks (Not Draggable) -->
-    <div v-for="(task, index) in checkedTasks" :key="task.id" class="task-list checked-list"
-      :class="{ 'task-row--even': (uncheckedTasks.length + index) % 2 === 0, 'not-done-yesterday': isNotDoneYesterday(task) }">
+    <div
+      v-for="(task, index) in checkedTasks"
+      :key="task.id"
+      class="task-list checked-list"
+      :class="{
+        'task-row--even': (uncheckedTasks.length + index) % 2 === 0,
+        'not-done-yesterday': isNotDoneYesterday(task),
+      }"
+    >
       <div class="row no-wrap q-gutter-x-xs task-row" :style="{ height: taskRowHeight }">
         <div class="col">
-          <q-slide-item :ref="(el) => setSlideItemRef(el as QSlideItem | null, task)" @left="() => onLeft(task)"
-            @right="() => onRight(task)" :aria-label="t('labels.taskActions')">
-            <template #left><q-icon name="edit" /></template>
-            <template #right><q-icon name="delete" /></template>
-            <q-item class="text-grey-7 q-pa-xs">
-              <q-item-section :style="{ fontSize: `${settingsStore.fontSize}rem` }">{{
-                task.title
-                }}</q-item-section>
-            </q-item>
-          </q-slide-item>
+          <q-item class="text-grey-7 q-pa-xs" @dblclick="onDoubleClickEdit(task)" clickable>
+            <q-item-section :style="{ fontSize: `${settingsStore.fontSize}rem` }">
+              {{ task.title }}
+            </q-item-section>
+          </q-item>
         </div>
-        <div v-for="day in allDays" :key="day.key" class="col-1 day-column"
-          :class="{ 'long-pressing': longPressingRow === `${task.id}-${day.dateStr}` }">
+        <div
+          v-for="day in allDays"
+          :key="day.key"
+          class="col-1 day-column"
+          :class="{ 'long-pressing': longPressingRow === `${task.id}-${day.dateStr}` }"
+        >
           <q-item class="flex-center">
-            <q-checkbox v-if="isCheckboxVisible(task, day)"
+            <q-checkbox
+              v-if="isCheckboxVisible(task, day)"
               :model-value="getCheckboxValue(task, day.dateStr)"
               :indeterminate-value="'indeterminate'"
               :indeterminate-icon="'remove'"
@@ -81,7 +109,8 @@
               @mouseleave="cancelLongPress"
               @touchstart="startLongPress(task.id, day.dateStr)"
               @touchend="cancelLongPress"
-              @touchcancel="cancelLongPress" />
+              @touchcancel="cancelLongPress"
+            />
           </q-item>
         </div>
       </div>
@@ -90,232 +119,225 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import draggable from 'vuedraggable'
-import { useQuasar, type QSlideItem, date as qDate } from 'quasar'
-import { useI18n } from 'vue-i18n'
-import { useTasksStore } from 'src/stores/tasks'
-import { useSettingsStore } from 'src/stores/settings'
-import { useDateManager } from 'src/composables/useDateManager'
-import type { Task } from 'src/types'
-import TaskDialog from 'src/components/dialogs/TaskDialog.vue'
+import { computed, ref } from 'vue';
+import draggable from 'vuedraggable';
+import { useQuasar, date as qDate } from 'quasar';
+import { useTasksStore } from 'src/stores/tasks';
+import { useSettingsStore } from 'src/stores/settings';
+import { useDateManager } from 'src/composables/useDateManager';
+import type { Task } from 'src/types';
+import TaskDialog from 'src/components/dialogs/TaskDialog.vue';
 
-const $q = useQuasar()
-const { t } = useI18n()
-const tasksStore = useTasksStore()
-const settingsStore = useSettingsStore()
-const { today, yesterday, tomorrow, todayStr, yesterdayStr, tomorrowStr } = useDateManager()
+const $q = useQuasar();
+const tasksStore = useTasksStore();
+const settingsStore = useSettingsStore();
+const { today, yesterday, tomorrow, todayStr, yesterdayStr, tomorrowStr } = useDateManager();
 
-const checkboxSize = computed(() => `${settingsStore.checkboxSize}px`)
+const checkboxSize = computed(() => `${settingsStore.checkboxSize}px`);
 const headerStyle = computed(() => ({
   fontSize: `${settingsStore.fontSize * 0.7}rem`,
-}))
-const taskRowHeight = computed(() => `${settingsStore.taskRowHeight}px`)
-
-const slideItemRefs = ref(new Map<string, QSlideItem>())
-const setSlideItemRef = (el: QSlideItem | null, task: Task) => {
-  if (el) {
-    slideItemRefs.value.set(task.id, el)
-  }
-}
+}));
+const taskRowHeight = computed(() => `${settingsStore.taskRowHeight}px`);
 
 const isTaskVisibleForToday = (task: Task): boolean => {
   if (task.type === 'once') {
-    const checkedDays = Object.keys(task.checkedDates).filter((d) => task.checkedDates[d])
-    if (checkedDays.length === 0) return true
-    return checkedDays.some((d) => d === todayStr.value || d === yesterdayStr.value)
+    const checkedDays = Object.keys(task.checkedDates).filter((d) => task.checkedDates[d]);
+    if (checkedDays.length === 0) return true;
+    return checkedDays.some((d) => d === todayStr.value || d === yesterdayStr.value);
   }
-  if (task.type === 'daily') return true
+  if (task.type === 'daily') return true;
   if (task.type === 'weekly' && Array.isArray(task.daysOfWeek) && task.daysOfWeek.length > 0) {
-    const yesterdayDay = new Date(yesterdayStr.value.replace(/-/g, '/')).getDay()
-    const todayDay = new Date(todayStr.value.replace(/-/g, '/')).getDay()
-    const tomorrowDay = new Date(tomorrowStr.value.replace(/-/g, '/')).getDay()
+    const yesterdayDay = new Date(yesterdayStr.value.replace(/-/g, '/')).getDay();
+    const todayDay = new Date(todayStr.value.replace(/-/g, '/')).getDay();
+    const tomorrowDay = new Date(tomorrowStr.value.replace(/-/g, '/')).getDay();
     return (
       task.daysOfWeek.includes(yesterdayDay) ||
       task.daysOfWeek.includes(todayDay) ||
       task.daysOfWeek.includes(tomorrowDay)
-    )
+    );
   }
-  return false
-}
+  return false;
+};
 
-const visibleTasks = computed(() => tasksStore.tasks.filter(isTaskVisibleForToday))
+const visibleTasks = computed(() => tasksStore.tasks.filter(isTaskVisibleForToday));
 
 const uncheckedTasks = computed({
   get: () =>
     visibleTasks.value
       .filter((t) => {
-        const status = t.checkedDates[todayStr.value]
-        return status !== true && status !== 'not-done'
+        const status = t.checkedDates[todayStr.value];
+        return status !== true && status !== 'not-done';
       })
       .sort((a, b) => {
-        const aPendingYesterday = isNotDoneYesterday(a)
-        const bPendingYesterday = isNotDoneYesterday(b)
+        const aPendingYesterday = isNotDoneYesterday(a);
+        const bPendingYesterday = isNotDoneYesterday(b);
 
         // Priorizar tarefas pendentes ontem
-        if (aPendingYesterday && !bPendingYesterday) return -1
-        if (!aPendingYesterday && bPendingYesterday) return 1
+        if (aPendingYesterday && !bPendingYesterday) return -1;
+        if (!aPendingYesterday && bPendingYesterday) return 1;
 
-        // Se ambas ou nenhuma está pendente ontem, ordenar por order
-        return a.order - b.order
+        // Função auxiliar para obter a prioridade do turno
+        const getShiftPriority = (shift?: string): number => {
+          switch (shift) {
+            case 'morning':
+              return 1;
+            case 'afternoon':
+              return 2;
+            case 'night':
+              return 3;
+            default:
+              return 4; // 'none' ou undefined
+          }
+        };
+
+        // Ordenar por prioridade do turno
+        const aShiftPriority = getShiftPriority(a.shift);
+        const bShiftPriority = getShiftPriority(b.shift);
+        if (aShiftPriority !== bShiftPriority) {
+          return aShiftPriority - bShiftPriority;
+        }
+
+        // Se ambos têm a mesma prioridade de turno, ordenar por order
+        return a.order - b.order;
       }),
   set: (newOrder) => {
-    tasksStore.updateTaskOrder(newOrder)
+    tasksStore.updateTaskOrder(newOrder);
   },
-})
+});
 
 const checkedTasks = computed(() =>
   visibleTasks.value
     .filter((t) => {
-      const status = t.checkedDates[todayStr.value]
-      return status === true || status === 'not-done'
+      const status = t.checkedDates[todayStr.value];
+      return status === true || status === 'not-done';
     })
-    .sort((a, b) => a.order - b.order)
-)
+    .sort((a, b) => a.order - b.order),
+);
 
 const allDays = computed(() => [
   { key: 'yesterday', dateStr: yesterdayStr.value },
   { key: 'today', dateStr: todayStr.value },
   { key: 'tomorrow', dateStr: tomorrowStr.value },
-])
+]);
 
 const days = computed(() => {
-  const format = settingsStore.dayHeaderFormat
-  if (format === 'none') return []
-  const formatStr = format === 'weekday' ? 'ddd' : 'ddd/DD'
-  return allDays.value.map(d => ({
+  const format = settingsStore.dayHeaderFormat;
+  if (format === 'none') return [];
+  const formatStr = format === 'weekday' ? 'ddd' : 'ddd/DD';
+  return allDays.value.map((d) => ({
     ...d,
-    header: d.key === 'yesterday' ? qDate.formatDate(yesterday.value, formatStr) :
-            d.key === 'today' ? qDate.formatDate(today.value, formatStr) :
-            qDate.formatDate(tomorrow.value, formatStr)
-  }))
-})
+    header:
+      d.key === 'yesterday'
+        ? qDate.formatDate(yesterday.value, formatStr)
+        : d.key === 'today'
+          ? qDate.formatDate(today.value, formatStr)
+          : qDate.formatDate(tomorrow.value, formatStr),
+  }));
+});
 
 const isCheckboxVisible = (task: Task, day: { key: string; dateStr: string }): boolean => {
   if (task.type === 'once') {
-    return day.key === 'today' || !!task.checkedDates[day.dateStr]
+    return day.key === 'today' || !!task.checkedDates[day.dateStr];
   }
   if (task.type === 'weekly' && Array.isArray(task.daysOfWeek)) {
     // Correctly handle timezone by parsing date string parts
     // new Date('YYYY-MM-DD') is parsed as UTC midnight, which can cause off-by-one day errors in some timezones.
     // Using replace to handle Safari compatibility with date strings.
-    const dayOfWeek = new Date(day.dateStr.replace(/-/g, '/')).getDay()
-    return task.daysOfWeek.includes(dayOfWeek)
+    const dayOfWeek = new Date(day.dateStr.replace(/-/g, '/')).getDay();
+    return task.daysOfWeek.includes(dayOfWeek);
   }
-  return task.type === 'daily'
-}
+  return task.type === 'daily';
+};
 
 // Long press tracking
-const longPressTimer = ref<number | null>(null)
-const longPressTarget = ref<{ taskId: string; dateStr: string } | null>(null)
-const longPressingRow = ref<string | null>(null)
-const longPressTriggered = ref(false)
+const longPressTimer = ref<number | null>(null);
+const longPressTarget = ref<{ taskId: string; dateStr: string } | null>(null);
+const longPressingRow = ref<string | null>(null);
+const longPressTriggered = ref(false);
 
 const onCheckChange = (taskId: string, dateStr: string, value: boolean | null) => {
   // Ignore normal click if long press was triggered
   if (value !== null && longPressTriggered.value) {
-    longPressTriggered.value = false
-    return
+    longPressTriggered.value = false;
+    return;
   }
 
-  const task = tasksStore.tasks.find((t) => t.id === taskId)
+  const task = tasksStore.tasks.find((t) => t.id === taskId);
   if (task) {
     // Long press action - toggle between 'not-done' and pending
     if (value === null) {
       if (task.checkedDates[dateStr] === 'not-done') {
-        delete task.checkedDates[dateStr]
+        delete task.checkedDates[dateStr];
       } else {
-        task.checkedDates[dateStr] = 'not-done'
+        task.checkedDates[dateStr] = 'not-done';
       }
     }
     // Normal click - toggle between done and pending
     else {
       if (value) {
-        task.checkedDates[dateStr] = true
+        task.checkedDates[dateStr] = true;
       } else {
-        delete task.checkedDates[dateStr]
+        delete task.checkedDates[dateStr];
       }
     }
-    tasksStore.saveTasks(true)
+    tasksStore.saveTasks(true);
   }
-}
+};
 
 const startLongPress = (taskId: string, dateStr: string) => {
-  longPressTarget.value = { taskId, dateStr }
-  longPressingRow.value = `${taskId}-${dateStr}`
-  longPressTriggered.value = false
+  longPressTarget.value = { taskId, dateStr };
+  longPressingRow.value = `${taskId}-${dateStr}`;
+  longPressTriggered.value = false;
 
   longPressTimer.value = window.setTimeout(() => {
     if (longPressTarget.value) {
-      longPressTriggered.value = true
-      onCheckChange(longPressTarget.value.taskId, longPressTarget.value.dateStr, null)
-      longPressTarget.value = null
-      longPressingRow.value = null
+      longPressTriggered.value = true;
+      onCheckChange(longPressTarget.value.taskId, longPressTarget.value.dateStr, null);
+      longPressTarget.value = null;
+      longPressingRow.value = null;
     }
-  }, 500)
-}
+  }, 500);
+};
 
 const cancelLongPress = () => {
   if (longPressTimer.value) {
-    clearTimeout(longPressTimer.value)
-    longPressTimer.value = null
+    clearTimeout(longPressTimer.value);
+    longPressTimer.value = null;
   }
-  longPressTarget.value = null
-  longPressingRow.value = null
-}
+  longPressTarget.value = null;
+  longPressingRow.value = null;
+};
 
 const getCheckboxValue = (task: Task, dateStr: string) => {
-  const value = task.checkedDates[dateStr]
-  if (value === true) return true
-  if (value === 'not-done') return 'indeterminate'
-  return false
-}
+  const value = task.checkedDates[dateStr];
+  if (value === true) return true;
+  if (value === 'not-done') return 'indeterminate';
+  return false;
+};
 
 const getCheckboxColor = (task: Task, dateStr: string) => {
-  const value = task.checkedDates[dateStr]
-  if (value === 'not-done') return 'red'
-  return 'green'
-}
+  const value = task.checkedDates[dateStr];
+  if (value === 'not-done') return 'red';
+  return 'green';
+};
 
 const isNotDoneYesterday = (task: Task) => {
-  const yesterdayDay = { key: 'yesterday', dateStr: yesterdayStr.value }
+  const yesterdayDay = { key: 'yesterday', dateStr: yesterdayStr.value };
   return (
-    isCheckboxVisible(task, yesterdayDay) &&
-    task.checkedDates[yesterdayStr.value] === undefined
-  )
-}
+    isCheckboxVisible(task, yesterdayDay) && task.checkedDates[yesterdayStr.value] === undefined
+  );
+};
 
 const onDragEnd = () => {
   // v-model handles the reordering, and the computed setter updates the store
-}
+};
 
-const onLeft = (task: Task) => {
+const onDoubleClickEdit = (task: Task) => {
   $q.dialog({
     component: TaskDialog,
     componentProps: { task },
-  }).onDismiss(() => {
-    slideItemRefs.value.get(task.id)?.reset()
-  })
-}
-
-const onRight = (task: Task) => {
-  // We reset the slide item immediately so the user sees it go back to normal
-  slideItemRefs.value.get(task.id)?.reset()
-  $q.dialog({
-    title: t('dialogs.confirmTitle'),
-    message: t('messages.confirmDelete', { taskTitle: task.title }),
-    cancel: true,
-    persistent: true,
-  }).onOk(() => {
-    tasksStore.deleteTask(task.id)
-    $q.notify({
-      type: 'positive',
-      message: t('messages.taskDeleted'),
-      timeout: 1500,
-      position: 'top',
-    })
-  })
-}
+  });
+};
 </script>
 
 <style lang="scss" scoped>

@@ -40,32 +40,32 @@
 </template>
 
 <script setup lang="ts">
-import { useDialogPluginComponent, useQuasar } from 'quasar'
-import { useI18n } from 'vue-i18n'
-import { useTasksStore } from 'src/stores/tasks'
-import type { Task } from 'src/types'
-import TaskDialog from './TaskDialog.vue'
+import { useDialogPluginComponent, useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
+import { useTasksStore } from 'src/stores/tasks';
+import type { Task } from 'src/types';
+import TaskDialog from './TaskDialog.vue';
 
-const { dialogRef, onDialogHide, onDialogCancel } = useDialogPluginComponent()
-defineEmits([...useDialogPluginComponent.emits])
+const { dialogRef, onDialogHide, onDialogCancel } = useDialogPluginComponent();
+defineEmits([...useDialogPluginComponent.emits]);
 
-const $q = useQuasar()
-const { t } = useI18n()
-const tasksStore = useTasksStore()
+const $q = useQuasar();
+const { t } = useI18n();
+const tasksStore = useTasksStore();
 
-const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const getDaysLabel = (days?: number[]) => {
-  if (!days || days.length === 0) return t('labels.noSpecificDays')
-  if (days.length === 7) return t('labels.everyDay')
-  return days.map(d => dayLabels[d]).join(', ')
-}
+  if (!days || days.length === 0) return t('labels.noSpecificDays');
+  if (days.length === 7) return t('labels.everyDay');
+  return days.map((d) => dayLabels[d]).join(', ');
+};
 
 const onLeft = (task: Task) => {
   $q.dialog({
     component: TaskDialog,
     componentProps: { task },
-  })
-}
+  });
+};
 
 const onRight = (task: Task) => {
   $q.dialog({
@@ -74,13 +74,13 @@ const onRight = (task: Task) => {
     cancel: true,
     persistent: true,
   }).onOk(() => {
-    tasksStore.deleteTask(task.id)
+    tasksStore.deleteTask(task.id);
     $q.notify({
       type: 'positive',
       message: t('messages.taskDeleted'),
       timeout: 1500,
       position: 'top',
-    })
-  })
-}
+    });
+  });
+};
 </script>

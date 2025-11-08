@@ -18,52 +18,52 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { useQuasar } from 'quasar'
-import { useSettingsStore } from 'src/stores/settings'
+import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { useQuasar } from 'quasar';
+import { useSettingsStore } from 'src/stores/settings';
 
-const $q = useQuasar()
-const settingsStore = useSettingsStore()
+const $q = useQuasar();
+const settingsStore = useSettingsStore();
 
-const isFullscreen = ref(false)
+const isFullscreen = ref(false);
 
 const updateFullscreenStatus = () => {
-  isFullscreen.value = document.fullscreenElement !== null
-}
+  isFullscreen.value = document.fullscreenElement !== null;
+};
 
 // Show overlay only if fullscreen is required AND not in fullscreen
 const shouldShowOverlay = computed(() => {
-  return settingsStore.requireFullscreen && !isFullscreen.value
-})
+  return settingsStore.requireFullscreen && !isFullscreen.value;
+});
 
 const toggleFullscreen = async () => {
   try {
-    const docEl = document.documentElement
+    const docEl = document.documentElement;
     if (docEl.requestFullscreen) {
-      await docEl.requestFullscreen()
-      updateFullscreenStatus()
+      await docEl.requestFullscreen();
+      updateFullscreenStatus();
     }
   } catch (err) {
-    console.error('Error attempting to enable fullscreen:', err)
+    console.error('Error attempting to enable fullscreen:', err);
   }
-}
+};
 
 onMounted(() => {
-  updateFullscreenStatus()
+  updateFullscreenStatus();
 
   // Listen for fullscreen changes
-  document.addEventListener('fullscreenchange', updateFullscreenStatus)
-  document.addEventListener('webkitfullscreenchange', updateFullscreenStatus)
-  document.addEventListener('mozfullscreenchange', updateFullscreenStatus)
-  document.addEventListener('MSFullscreenChange', updateFullscreenStatus)
-})
+  document.addEventListener('fullscreenchange', updateFullscreenStatus);
+  document.addEventListener('webkitfullscreenchange', updateFullscreenStatus);
+  document.addEventListener('mozfullscreenchange', updateFullscreenStatus);
+  document.addEventListener('MSFullscreenChange', updateFullscreenStatus);
+});
 
 onUnmounted(() => {
-  document.removeEventListener('fullscreenchange', updateFullscreenStatus)
-  document.removeEventListener('webkitfullscreenchange', updateFullscreenStatus)
-  document.removeEventListener('mozfullscreenchange', updateFullscreenStatus)
-  document.removeEventListener('MSFullscreenChange', updateFullscreenStatus)
-})
+  document.removeEventListener('fullscreenchange', updateFullscreenStatus);
+  document.removeEventListener('webkitfullscreenchange', updateFullscreenStatus);
+  document.removeEventListener('mozfullscreenchange', updateFullscreenStatus);
+  document.removeEventListener('MSFullscreenChange', updateFullscreenStatus);
+});
 </script>
 
 <style scoped>

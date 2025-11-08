@@ -3,7 +3,9 @@
     <q-card class="q-dialog-plugin" style="width: 400px">
       <q-form @submit="onSaveClick">
         <q-card-section>
-          <div class="text-h6">{{ isEditing ? t('dialogs.editTaskTitle') : t('dialogs.addTaskTitle') }}</div>
+          <div class="text-h6">
+            {{ isEditing ? t('dialogs.editTaskTitle') : t('dialogs.addTaskTitle') }}
+          </div>
         </q-card-section>
 
         <q-card-section class="q-pt-none q-gutter-y-md">
@@ -11,13 +13,20 @@
             v-model="title"
             :label="t('labels.title')"
             autofocus
-            :rules="[val => !!val || t('validation.titleRequired')]"
+            :rules="[(val) => !!val || t('validation.titleRequired')]"
             lazy-rules
           />
           <q-select
             v-model="type"
             :options="taskTypeOptions"
             :label="t('labels.type')"
+            emit-value
+            map-options
+          />
+          <q-select
+            v-model="shift"
+            :options="shiftOptions"
+            :label="t('labels.shift')"
             emit-value
             map-options
           />
@@ -40,6 +49,13 @@
         </q-card-section>
 
         <q-card-actions align="right">
+          <q-btn
+            v-if="isEditing"
+            flat
+            color="negative"
+            :label="t('buttons.delete')"
+            @click="onDeleteClick"
+          />
           <q-btn flat :label="t('buttons.cancel')" @click="onDialogCancel" />
           <q-btn color="primary" :label="t('buttons.save')" type="submit" :disable="!title" />
         </q-card-actions>
@@ -49,47 +65,47 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useDialogPluginComponent } from 'quasar'
-import { useI18n } from 'vue-i18n'
-import { useTasksStore } from 'src/stores/tasks'
-import type { Task, TaskType } from 'src/types'
+import { ref, computed } from 'vue';
+import { useDialogPluginComponent } from 'quasar';
+import { useI18n } from 'vue-i18n';
+import { useTasksStore } from 'src/stores/tasks';
+import type { Task, TaskType, Shift } from 'src/types';
 
 const props = defineProps({
   task: {
     type: Object as () => Task | null,
     default: null,
   },
-})
+});
 
-const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent()
-defineEmits([...useDialogPluginComponent.emits])
+const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
+defineEmits([...useDialogPluginComponent.emits]);
 
-const { t } = useI18n()
-const tasksStore = useTasksStore()
+const { t } = useI18n();
+const tasksStore = useTasksStore();
 
-const isEditing = !!props.task
+const isEditing = !!props.task;
 
-const title = ref(props.task?.title || '')
-const type = ref<TaskType>(props.task?.type || 'daily')
+const title = ref(props.task?.title || '');
+const type = ref<TaskType>(props.task?.type || 'daily');
+const shift = ref<Shift>(props.task?.shift || 'none');
 
 // Robust initialization: ensures daysOfWeek is always an array.
 const getInitialDays = () => {
-  const taskDays = props.task?.daysOfWeek
+  const taskDays = props.task?.daysOfWeek;
   if (props.task?.type !== 'weekly' || taskDays === undefined || taskDays === null) {
-    return []
+    return [];
   }
   // Coerce to array if it's not, handling corrupted data (e.g., a single number).
-  return Array.isArray(taskDays) ? taskDays : [taskDays]
-}
-const daysOfWeek = ref(getInitialDays())
-
+  return Array.isArray(taskDays) ? taskDays : [taskDays];
+};
+const daysOfWeek = ref(getInitialDays());
 
 const taskTypeOptions = computed(() => [
   { label: t('labels.taskTypes.daily'), value: 'daily' },
   { label: t('labels.taskTypes.once'), value: 'once' },
   { label: t('labels.taskTypes.weekly'), value: 'weekly' },
-])
+]);
 
 const dayOptions = [
   { label: 'S', value: 0 },
@@ -99,33 +115,58 @@ const dayOptions = [
   { label: 'T', value: 4 },
   { label: 'F', value: 5 },
   { label: 'S', value: 6 },
-]
+];
+
+const shiftOptions = computed(() => [
+  { label: t('labels.shifts.none'), value: 'none' },
+  { label: t('labels.shifts.morning'), value: 'morning' },
+  { label: t('labels.shifts.afternoon'), value: 'afternoon' },
+  { label: t('labels.shifts.night'), value: 'night' },
+]);
 
 const toggleDay = (dayValue: number) => {
-  const index = daysOfWeek.value.indexOf(dayValue)
+  const index = daysOfWeek.value.indexOf(dayValue);
   if (index === -1) {
-    daysOfWeek.value.push(dayValue)
+    daysOfWeek.value.push(dayValue);
   } else {
-    daysOfWeek.value.splice(index, 1)
+    daysOfWeek.value.splice(index, 1);
   }
-  console.log('daysOfWeek updated in TaskDialog:', daysOfWeek.value, '(is array:', Array.isArray(daysOfWeek.value), ')')
-}
+  console.log(
+    'daysOfWeek updated in TaskDialog:',
+    daysOfWeek.value,
+    '(is array:',
+    Array.isArray(daysOfWeek.value),
+    ')',
+  );
+};
 
 const onSaveClick = () => {
-  const taskData: { title: string; type: TaskType; daysOfWeek?: number[] } = {
+  const taskData: { title: string; type: TaskType; daysOfWeek?: number[]; shift?: Shift } = {
     title: title.value,
     type: type.value,
+  };
+
+  // Only add shift if it's not 'none'
+  if (shift.value !== 'none') {
+    taskData.shift = shift.value;
   }
 
   if (type.value === 'weekly') {
-    taskData.daysOfWeek = daysOfWeek.value.sort((a, b) => a - b) // Sort for consistency
+    taskData.daysOfWeek = daysOfWeek.value.sort((a, b) => a - b); // Sort for consistency
   }
 
   if (isEditing && props.task) {
-    tasksStore.updateTask({ id: props.task.id, ...taskData })
+    tasksStore.updateTask({ id: props.task.id, ...taskData });
   } else {
-    tasksStore.addTask(taskData)
+    tasksStore.addTask(taskData);
   }
-  onDialogOK()
-}
+  onDialogOK();
+};
+
+const onDeleteClick = () => {
+  if (props.task) {
+    tasksStore.deleteTask(props.task.id);
+    onDialogOK();
+  }
+};
 </script>

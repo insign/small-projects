@@ -13,6 +13,7 @@ export default {
     recurringTasks: 'Tarefas Recorrentes',
     settings: 'Configurações',
     toggleFullscreen: 'Alternar Tela Cheia',
+    delete: 'Apagar',
   },
   labels: {
     syncId: 'ID de Sincronização',
@@ -39,10 +40,17 @@ export default {
     minutesUnit: '{count} min',
     secondsUnit: '{count}s',
     untilInteraction: 'Até Interagir',
+    shift: 'Turno',
     taskTypes: {
       daily: 'Diária',
       once: 'Única',
       weekly: 'Semanal',
+    },
+    shifts: {
+      none: 'Nenhum',
+      morning: 'Manhã',
+      afternoon: 'Tarde',
+      night: 'Noite',
     },
   },
   hints: {
@@ -72,4 +80,4 @@ export default {
       enterButton: 'Entrar em Tela Cheia',
     },
   },
-}
+};

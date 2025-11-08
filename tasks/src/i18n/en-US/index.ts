@@ -16,6 +16,7 @@ export default {
     recurringTasks: 'Recurring Tasks',
     settings: 'Settings',
     toggleFullscreen: 'Toggle Fullscreen',
+    delete: 'Delete',
   },
   labels: {
     syncId: 'Sync ID',
@@ -42,10 +43,17 @@ export default {
     minutesUnit: '{count} min',
     secondsUnit: '{count}s',
     untilInteraction: 'Until Interaction',
+    shift: 'Shift',
     taskTypes: {
       daily: 'Daily',
       once: 'Once',
       weekly: 'Weekly',
+    },
+    shifts: {
+      none: 'None',
+      morning: 'Morning',
+      afternoon: 'Afternoon',
+      night: 'Night',
     },
   },
   hints: {
@@ -75,4 +83,4 @@ export default {
       enterButton: 'Enter Fullscreen',
     },
   },
-}
+};
