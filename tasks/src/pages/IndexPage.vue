@@ -391,16 +391,19 @@ const startFlash = (taskId: string) => {
 };
 
 /**
- * Handle quick click on task title to mark today as done
- * @param task - The task to mark as done
+ * Handle quick click on task title to toggle today's status
+ * If task is done, unmark it; if not done, mark it as done
+ * @param task - The task to toggle
  */
 const onQuickDone = (task: Task) => {
   // Start flash animation
   startFlash(task.id);
 
-  // After flash animation, mark task as done
+  // After flash animation, toggle task state
   setTimeout(() => {
-    onCheckChange(task.id, todayStr.value, true);
+    const isDone = task.checkedDates[todayStr.value] === true;
+    // If done, unmark; if not done, mark as done
+    onCheckChange(task.id, todayStr.value, !isDone);
   }, 200);
 };
 
