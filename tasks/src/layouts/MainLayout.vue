@@ -1,6 +1,6 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header v-show="!$q.fullscreen.isActive">
+    <q-header>
       <q-toolbar :class="`bg-${screensaverStore.toolbarColor}`">
         <q-toolbar-title :class="`text-${screensaverStore.buttonColor}`"> {{ t('tasksTitle') }} </q-toolbar-title>
 

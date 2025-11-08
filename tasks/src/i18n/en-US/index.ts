@@ -66,4 +66,10 @@ export default {
     noRecurringTasks: 'No recurring tasks to show.',
     notFound: 'Oops. Nothing here...',
   },
+  fullscreen: {
+    overlay: {
+      message: 'To operate tasks, you must be in fullscreen mode',
+      enterButton: 'Enter Fullscreen',
+    },
+  },
 }

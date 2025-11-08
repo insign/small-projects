@@ -37,13 +37,16 @@ const confettiColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '
 const generateConfetti = () => {
   if (!showConfetti.value) return
 
-  const newConfetti = Array.from({ length: 50 }, (_, i) => ({
-    id: Date.now() + i,
-    x: Math.random() * 100,
-    y: -10,
-    delay: Math.random() * 2,
-    color: confettiColors[Math.floor(Math.random() * confettiColors.length)]
-  }))
+  const newConfetti = Array.from({ length: 50 }, (_, i) => {
+    const randomColor = confettiColors[Math.floor(Math.random() * confettiColors.length)]
+    return {
+      id: Date.now() + i,
+      x: Math.random() * 100,
+      y: -10,
+      delay: Math.random() * 2,
+      color: randomColor || '#FF6B6B' // Fallback color if undefined
+    }
+  })
 
   confettiPieces.value = [...confettiPieces.value, ...newConfetti]
 

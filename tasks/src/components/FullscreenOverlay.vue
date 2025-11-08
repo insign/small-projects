@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useSettingsStore } from 'src/stores/settings'
 
@@ -28,7 +28,7 @@ const settingsStore = useSettingsStore()
 const isFullscreen = ref(false)
 
 const updateFullscreenStatus = () => {
-  isFullscreen.value = (document as any).fullscreenElement !== null
+  isFullscreen.value = document.fullscreenElement !== null
 }
 
 // Show overlay only if fullscreen is required AND not in fullscreen
@@ -38,8 +38,11 @@ const shouldShowOverlay = computed(() => {
 
 const toggleFullscreen = async () => {
   try {
-    await (document as any).documentElement.requestFullscreen()
-    updateFullscreenStatus()
+    const docEl = document.documentElement
+    if (docEl.requestFullscreen) {
+      await docEl.requestFullscreen()
+      updateFullscreenStatus()
+    }
   } catch (err) {
     console.error('Error attempting to enable fullscreen:', err)
   }

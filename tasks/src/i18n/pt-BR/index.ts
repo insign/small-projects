@@ -63,4 +63,10 @@ export default {
     noRecurringTasks: 'Nenhuma tarefa recorrente para mostrar.',
     notFound: 'Oops. Nada por aqui...',
   },
+  fullscreen: {
+    overlay: {
+      message: 'Para operar as tarefas, é necessário estar em tela cheia',
+      enterButton: 'Entrar em Tela Cheia',
+    },
+  },
 }
