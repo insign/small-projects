@@ -23,13 +23,46 @@
             emit-value
             map-options
           />
-          <q-select
-            v-model="shift"
-            :options="shiftOptions"
-            :label="t('labels.shift')"
-            emit-value
-            map-options
-          />
+          <div>
+            <div class="text-caption q-mb-sm">{{ t('labels.shift') }}</div>
+            <div class="q-gutter-sm">
+              <q-item tag="label" v-ripple>
+                <q-item-section avatar>
+                  <q-radio v-model="shift" val="none" color="primary" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ t('labels.shifts.none') }}</q-item-label>
+                </q-item-section>
+              </q-item>
+
+              <q-item tag="label" v-ripple>
+                <q-item-section avatar>
+                  <q-radio v-model="shift" val="morning" color="primary" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ t('labels.shifts.morning') }}</q-item-label>
+                </q-item-section>
+              </q-item>
+
+              <q-item tag="label" v-ripple>
+                <q-item-section avatar>
+                  <q-radio v-model="shift" val="afternoon" color="primary" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ t('labels.shifts.afternoon') }}</q-item-label>
+                </q-item-section>
+              </q-item>
+
+              <q-item tag="label" v-ripple>
+                <q-item-section avatar>
+                  <q-radio v-model="shift" val="night" color="primary" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ t('labels.shifts.night') }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </div>
+          </div>
           <div v-if="type === 'weekly'">
             <div class="text-caption q-mb-sm">{{ t('labels.daysOfWeek') }}</div>
             <!-- Replaced QBtnToggle with a group of individual QBtn components -->
@@ -116,13 +149,6 @@ const dayOptions = [
   { label: 'F', value: 5 },
   { label: 'S', value: 6 },
 ];
-
-const shiftOptions = computed(() => [
-  { label: t('labels.shifts.none'), value: 'none' },
-  { label: t('labels.shifts.morning'), value: 'morning' },
-  { label: t('labels.shifts.afternoon'), value: 'afternoon' },
-  { label: t('labels.shifts.night'), value: 'night' },
-]);
 
 const toggleDay = (dayValue: number) => {
   const index = daysOfWeek.value.indexOf(dayValue);
