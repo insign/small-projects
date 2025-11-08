@@ -363,7 +363,14 @@ const onDoubleClickEdit = (task: Task) => {
 
 /* Apply zebra striping using the class on the wrapper */
 .task-row--even {
-  background-color: $grey-3;
+  background-color: $grey-3 !important;
+  padding: 4px 0;
+}
+
+/* Apply red background for tasks not done yesterday */
+.not-done-yesterday {
+  background-color: rgba(255, 0, 0, 0.15) !important;
+  padding: 4px 0;
 }
 
 /* Dark mode */
@@ -373,7 +380,11 @@ const onDoubleClickEdit = (task: Task) => {
   }
 
   .task-row--even {
-    background-color: $grey-10;
+    background-color: $grey-10 !important;
+  }
+
+  .not-done-yesterday {
+    background-color: rgba(255, 0, 0, 0.25) !important;
   }
 }
 
