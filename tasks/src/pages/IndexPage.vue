@@ -49,7 +49,7 @@
                 }"
               >
                 <q-item-section :style="{ fontSize: `${settingsStore.fontSize}rem` }">
-                  {{ task.title }}
+                  {{ getTaskTitleWithEmoji(task) }}
                 </q-item-section>
               </q-item>
             </div>
@@ -113,7 +113,7 @@
             }"
           >
             <q-item-section :style="{ fontSize: `${settingsStore.fontSize}rem` }">
-              {{ task.title }}
+              {{ getTaskTitleWithEmoji(task) }}
             </q-item-section>
           </q-item>
         </div>
@@ -183,6 +183,26 @@ const getCurrentShift = (): 'morning' | 'afternoon' | 'night' | null => {
   }
 
   return null;
+};
+
+/**
+ * Get task title with emoji prefix based on shift
+ * @param task - The task to check
+ * @returns Title with emoji or just title
+ */
+const getTaskTitleWithEmoji = (task: Task): string => {
+  if (!task.shift || task.shift === 'none') {
+    return task.title;
+  }
+
+  const emojis = {
+    morning: '🌅',
+    afternoon: '☀️',
+    night: '🌙',
+  };
+
+  const emoji = emojis[task.shift] || '';
+  return emoji ? `${emoji} ${task.title}` : task.title;
 };
 
 /**
