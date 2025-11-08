@@ -1,6 +1,3 @@
-// This is just an example,
-// so you can safely delete all default props below
-
 export default {
   failed: 'Action failed',
   success: 'Action was successful',
@@ -78,10 +75,5 @@ export default {
     noRecurringTasks: 'No recurring tasks to show.',
     notFound: 'Oops. Nothing here...',
   },
-  fullscreen: {
-    overlay: {
-      message: 'To operate tasks, you must be in fullscreen mode',
-      enterButton: 'Enter Fullscreen',
-    },
-  },
-};
+  fullscreen: {},
+}

@@ -38,14 +38,17 @@
                 @dblclick="onDoubleClickEdit(task)"
                 clickable
                 :style="{
-                  backgroundColor: getShiftBackgroundColor(task)
-                    || (isNotDoneYesterday(task)
-                      ? $q.dark.isActive ? 'rgba(255, 0, 0, 0.25)' : 'rgba(255, 0, 0, 0.15)'
-                      : (index % 2 === 0
-                        ? $q.dark.isActive ? '#1e1e1e' : '#f5f5f5'
-                        : 'transparent'
-                      )
-                    )
+                  backgroundColor:
+                    getShiftBackgroundColor(task) ||
+                    (isNotDoneYesterday(task)
+                      ? $q.dark.isActive
+                        ? 'rgba(255, 0, 0, 0.25)'
+                        : 'rgba(255, 0, 0, 0.15)'
+                      : index % 2 === 0
+                        ? $q.dark.isActive
+                          ? '#1e1e1e'
+                          : '#f5f5f5'
+                        : 'transparent'),
                 }"
               >
                 <q-item-section :style="{ fontSize: `${settingsStore.fontSize}rem` }">
@@ -103,14 +106,17 @@
             @dblclick="onDoubleClickEdit(task)"
             clickable
             :style="{
-              backgroundColor: getShiftBackgroundColor(task)
-                || (isNotDoneYesterday(task)
-                  ? $q.dark.isActive ? 'rgba(255, 0, 0, 0.25)' : 'rgba(255, 0, 0, 0.15)'
-                  : ((uncheckedTasks.length + index) % 2 === 0
-                    ? $q.dark.isActive ? '#1e1e1e' : '#f5f5f5'
-                    : 'transparent'
-                  )
-                )
+              backgroundColor:
+                getShiftBackgroundColor(task) ||
+                (isNotDoneYesterday(task)
+                  ? $q.dark.isActive
+                    ? 'rgba(255, 0, 0, 0.25)'
+                    : 'rgba(255, 0, 0, 0.15)'
+                  : (uncheckedTasks.length + index) % 2 === 0
+                    ? $q.dark.isActive
+                      ? '#1e1e1e'
+                      : '#f5f5f5'
+                    : 'transparent'),
             }"
           >
             <q-item-section :style="{ fontSize: `${settingsStore.fontSize}rem` }">
@@ -453,10 +459,6 @@ const onDoubleClickEdit = (task: Task) => {
 </script>
 
 <style lang="scss" scoped>
-.task-list {
-  /* min-height is now set dynamically via style binding */
-}
-
 .task-row,
 .task-row-title {
   min-width: 30px;
@@ -482,10 +484,6 @@ const onDoubleClickEdit = (task: Task) => {
 .day-column {
   min-width: 45px;
   max-width: 60px;
-}
-
-.today-column .q-checkbox * {
-  color: $blue-5;
 }
 
 .yesterday-column {
