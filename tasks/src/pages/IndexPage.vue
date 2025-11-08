@@ -316,11 +316,16 @@ const checkedTasks = computed(() =>
     .sort((a, b) => a.order - b.order),
 );
 
-const allDays = computed(() => [
-  { key: 'yesterday', dateStr: yesterdayStr.value },
-  { key: 'today', dateStr: todayStr.value },
-  { key: 'tomorrow', dateStr: tomorrowStr.value },
-]);
+const allDays = computed(() => {
+  const days = [
+    { key: 'yesterday', dateStr: yesterdayStr.value },
+    { key: 'today', dateStr: todayStr.value },
+  ];
+  if (settingsStore.showTomorrow) {
+    days.push({ key: 'tomorrow', dateStr: tomorrowStr.value });
+  }
+  return days;
+});
 
 const days = computed(() => {
   const format = settingsStore.dayHeaderFormat;

@@ -27,4 +27,5 @@ export interface Settings {
   checkboxSize: number; // in pixels
   taskRowHeight: number; // in pixels
   dayHeaderFormat: DayHeaderFormat; // format for day headers
+  showTomorrow: boolean; // whether to show tomorrow column
 }

@@ -39,6 +39,7 @@ export default {
     checkboxSize: 'Checkbox Size',
     taskRowHeight: 'Task Row Height',
     dayHeaderFormat: 'Day Header Format',
+    showTomorrow: 'Show tomorrow column',
     disabled: 'Disabled',
     minutesUnit: '{count} min',
     secondsUnit: '{count}s',

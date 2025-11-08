@@ -97,6 +97,7 @@
           emit-value
           map-options
         />
+        <q-toggle v-model="localShowTomorrow" :label="t('labels.showTomorrow')" />
       </q-card-section>
 
       <q-card-actions align="right">
@@ -148,6 +149,7 @@ const localScreensaverConfetti = ref(settingsStore.screensaverConfetti);
 const localCheckboxSize = ref(settingsStore.checkboxSize);
 const localTaskRowHeight = ref(settingsStore.taskRowHeight);
 const localDayHeaderFormat = ref(settingsStore.dayHeaderFormat);
+const localShowTomorrow = ref(settingsStore.showTomorrow);
 
 const langOptions = [
   { value: 'en-US', label: 'English' },
@@ -187,6 +189,7 @@ const onSaveClick = () => {
     settingsStore.setCheckboxSize(localCheckboxSize.value);
     settingsStore.setTaskRowHeight(localTaskRowHeight.value);
     settingsStore.setDayHeaderFormat(localDayHeaderFormat.value);
+    settingsStore.setShowTomorrow(localShowTomorrow.value);
     onDialogOK();
   }
 };

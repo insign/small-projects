@@ -36,6 +36,7 @@ export default {
     checkboxSize: 'Tamanho do Checkbox',
     taskRowHeight: 'Altura da Linha da Tarefa',
     dayHeaderFormat: 'Formato do Cabeçalho dos Dias',
+    showTomorrow: 'Exibir coluna de amanhã',
     disabled: 'Desativado',
     minutesUnit: '{count} min',
     secondsUnit: '{count}s',

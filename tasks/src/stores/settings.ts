@@ -19,6 +19,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const checkboxSize = ref<number>(24); // in pixels
   const taskRowHeight = ref<number>(30); // in pixels
   const dayHeaderFormat = ref<DayHeaderFormat>('weekday'); // default to weekday only
+  const showTomorrow = ref<boolean>(true); // whether to show tomorrow column
   const version = ref(0);
 
   const getSettingsKey = () => (syncId.value ? `${syncId.value}${SETTINGS_KEY_SUFFIX}` : null);
@@ -40,6 +41,7 @@ export const useSettingsStore = defineStore('settings', () => {
       checkboxSize: checkboxSize.value,
       taskRowHeight: taskRowHeight.value,
       dayHeaderFormat: dayHeaderFormat.value,
+      showTomorrow: showTomorrow.value,
     };
     LocalStorage.set(key, settings);
 
@@ -64,6 +66,7 @@ export const useSettingsStore = defineStore('settings', () => {
       checkboxSize.value = storedSettings?.checkboxSize || 24;
       taskRowHeight.value = storedSettings?.taskRowHeight || 30;
       dayHeaderFormat.value = storedSettings?.dayHeaderFormat || 'weekday';
+      showTomorrow.value = storedSettings?.showTomorrow ?? true;
     } else {
       fontSize.value = 1;
       language.value = 'pt-BR';
@@ -75,6 +78,7 @@ export const useSettingsStore = defineStore('settings', () => {
       checkboxSize.value = 24;
       taskRowHeight.value = 30;
       dayHeaderFormat.value = 'weekday';
+      showTomorrow.value = true;
     }
     loadVersion();
   }
@@ -169,6 +173,13 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }
 
+  function setShowTomorrow(show: boolean) {
+    if (show !== showTomorrow.value) {
+      showTomorrow.value = show;
+      saveSettings(true);
+    }
+  }
+
   function setAllSettingsFromRemote(newSettings: Partial<Settings>) {
     let changed = false;
     if (newSettings.fontSize !== undefined && newSettings.fontSize !== fontSize.value) {
@@ -229,6 +240,10 @@ export const useSettingsStore = defineStore('settings', () => {
       dayHeaderFormat.value = newSettings.dayHeaderFormat;
       changed = true;
     }
+    if (newSettings.showTomorrow !== undefined && newSettings.showTomorrow !== showTomorrow.value) {
+      showTomorrow.value = newSettings.showTomorrow;
+      changed = true;
+    }
 
     if (changed) {
       saveSettings(false); // Save all changes at once, don't increment version
@@ -270,6 +285,7 @@ export const useSettingsStore = defineStore('settings', () => {
     checkboxSize,
     taskRowHeight,
     dayHeaderFormat,
+    showTomorrow,
     version,
     setVersion,
     loadSettings,
@@ -285,6 +301,7 @@ export const useSettingsStore = defineStore('settings', () => {
     setCheckboxSize,
     setTaskRowHeight,
     setDayHeaderFormat,
+    setShowTomorrow,
     loadInitialId,
     setAllSettingsFromRemote,
   };

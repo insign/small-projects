@@ -48,6 +48,7 @@ export function useSync() {
           checkboxSize: settingsStore.checkboxSize,
           taskRowHeight: settingsStore.taskRowHeight,
           dayHeaderFormat: settingsStore.dayHeaderFormat,
+          showTomorrow: settingsStore.showTomorrow,
         };
         const response = await putData(settingsId, dataToPush);
         settingsStore.setVersion(response.version);
