@@ -106,7 +106,9 @@
           <q-item
             class="text-grey-7 q-pa-xs"
             @dblclick="onDoubleClickEdit(task)"
+            @click="onQuickDone(task)"
             clickable
+            :class="{ 'flash-success': flashingRows.has(task.id) }"
             :style="{
               backgroundColor:
                 getShiftBackgroundColor(task) ||
